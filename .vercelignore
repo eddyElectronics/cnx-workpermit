@@ -1,0 +1,9 @@
+server.js
+certificates/
+generate-certs.js
+test-cert.js
+*.pfx
+*.pem
+HTTPS_SETUP.md
+TROUBLESHOOTING_API.md
+public/test-upload.html

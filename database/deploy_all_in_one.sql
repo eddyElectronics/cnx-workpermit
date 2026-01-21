@@ -465,36 +465,66 @@ BEGIN
     DECLARE @Year NVARCHAR(4) = CAST(YEAR(GETDATE()) AS NVARCHAR(4));
     DECLARE @Month NVARCHAR(2) = RIGHT('0' + CAST(MONTH(GETDATE()) AS NVARCHAR(2)), 2);
     DECLARE @Day NVARCHAR(2) = RIGHT('0' + CAST(DAY(GETDATE()) AS NVARCHAR(2)), 2);
-    DECLARE @Sequence NVARCHAR(2);
+    DECLARE @Sequence INT;
+    DECLARE @SequenceStr NVARCHAR(2);
+    DECLARE @MaxRetries INT = 10;
+    DECLARE @RetryCount INT = 0;
+    DECLARE @Success BIT = 0;
     
-    BEGIN TRY
-        BEGIN TRANSACTION;
-        -- Count permits created today
-        SELECT @Sequence = RIGHT('00' + CAST(COUNT(*) + 1 AS NVARCHAR(2)), 2)
-        FROM [dbo].[WorkPermits]
-        WHERE CAST([CreatedDate] AS DATE) = CAST(GETDATE() AS DATE);
-        
-        -- Format: CNX-P{YYYYMMDD}-{Running number 2 digit}
-        SET @PermitNumber = 'CNX-P' + @Year + @Month + @Day + '-' + @Sequence;
-        
-        INSERT INTO [dbo].[WorkPermits] ([PermitNumber], [UserId], [OwnerName], [CompanyName],
-            [AreaId], [WorkTypeId], [WorkShift], [StartDate], [EndDate], [Status], [Remarks])
-        VALUES (@PermitNumber, @UserId, @OwnerName, @CompanyName,
-            @AreaId, @WorkTypeId, @WorkShift, @StartDate, @EndDate, N'รอตรวจสอบ', @Remarks);
-        
-        SET @PermitId = SCOPE_IDENTITY();
-        
-        INSERT INTO [dbo].[AuditLog] ([TableName], [RecordId], [Action], [NewValue], [ChangedBy])
-        VALUES ('WorkPermits', @PermitId, 'INSERT', 'PermitNumber: ' + @PermitNumber + ', Status: รอตรวจสอบ', @UserId);
-        
-        COMMIT TRANSACTION;
-        SELECT @PermitId AS [PermitId], @PermitNumber AS [PermitNumber], 'SUCCESS' AS [Status];
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        RAISERROR(@ErrorMessage, 16, 1);
-    END CATCH
+    WHILE @RetryCount < @MaxRetries AND @Success = 0
+    BEGIN
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            
+            -- Get the next sequence number by finding the MAX sequence for today
+            SELECT @Sequence = ISNULL(MAX(CAST(RIGHT([PermitNumber], 2) AS INT)), 0) + 1
+            FROM [dbo].[WorkPermits] WITH (TABLOCKX, HOLDLOCK)
+            WHERE [PermitNumber] LIKE 'CNX-P' + @Year + @Month + @Day + '-%';
+            
+            -- Format sequence as 2-digit string
+            SET @SequenceStr = RIGHT('00' + CAST(@Sequence AS NVARCHAR(2)), 2);
+            
+            -- Format: CNX-P{YYYYMMDD}-{Running number 2 digit}
+            SET @PermitNumber = 'CNX-P' + @Year + @Month + @Day + '-' + @SequenceStr;
+            
+            INSERT INTO [dbo].[WorkPermits] ([PermitNumber], [UserId], [OwnerName], [CompanyName],
+                [AreaId], [WorkTypeId], [WorkShift], [StartDate], [EndDate], [Status], [Remarks])
+            VALUES (@PermitNumber, @UserId, @OwnerName, @CompanyName,
+                @AreaId, @WorkTypeId, @WorkShift, @StartDate, @EndDate, N'รอตรวจสอบ', @Remarks);
+            
+            SET @PermitId = SCOPE_IDENTITY();
+            
+            INSERT INTO [dbo].[AuditLog] ([TableName], [RecordId], [Action], [NewValue], [ChangedBy])
+            VALUES ('WorkPermits', @PermitId, 'INSERT', 'PermitNumber: ' + @PermitNumber + ', Status: รอตรวจสอบ', @UserId);
+            
+            COMMIT TRANSACTION;
+            SET @Success = 1;
+            
+            SELECT @PermitId AS [PermitId], @PermitNumber AS [PermitNumber], 'SUCCESS' AS [Status];
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            
+            -- Check if it's a unique constraint violation
+            IF ERROR_NUMBER() = 2627 OR ERROR_NUMBER() = 2601
+            BEGIN
+                SET @RetryCount = @RetryCount + 1;
+                IF @RetryCount >= @MaxRetries
+                BEGIN
+                    DECLARE @ErrorMessage NVARCHAR(4000) = 'Failed to generate unique permit number after ' + CAST(@MaxRetries AS NVARCHAR(10)) + ' attempts. ' + ERROR_MESSAGE();
+                    RAISERROR(@ErrorMessage, 16, 1);
+                END
+                -- Wait a bit before retry (in milliseconds)
+                WAITFOR DELAY '00:00:00.100';
+            END
+            ELSE
+            BEGIN
+                -- For other errors, raise immediately
+                DECLARE @OtherError NVARCHAR(4000) = ERROR_MESSAGE();
+                RAISERROR(@OtherError, 16, 1);
+            END
+        END CATCH
+    END
 END
 GO
 PRINT '✓ usp_CreateWorkPermit created'

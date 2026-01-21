@@ -68,15 +68,15 @@ body {
   }
 
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900 placeholder:text-gray-500;
   }
 
   select.input {
-    @apply text-gray-900;
+    @apply text-gray-900 bg-white;
   }
 
   textarea.input {
-    @apply text-gray-900;
+    @apply text-gray-900 bg-white;
   }
 
   .label {

@@ -72,14 +72,17 @@ export default function PermitListPage() {
     }
 
     const filtered = permits.filter((permit) => {
-      const createdDate = new Date(permit.CreatedDate)
+      const startDate = new Date(permit.StartDate)
+      const endDate = new Date(permit.EndDate)
       const selected = new Date(selectedDate)
       
-      // Compare only the date part (ignore time)
-      createdDate.setHours(0, 0, 0, 0)
+      // Set time to start and end of day for proper comparison
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setHours(23, 59, 59, 999)
       selected.setHours(0, 0, 0, 0)
       
-      return createdDate.getTime() === selected.getTime()
+      // Check if selected date is within the work period (StartDate to EndDate)
+      return selected >= startDate && selected <= endDate
     })
 
     setFilteredPermits(filtered)
@@ -181,7 +184,7 @@ export default function PermitListPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            กรองตามวันที่สร้างคำขอ
+            กรองตามช่วงเวลาปฏิบัติงาน
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-1">
@@ -220,6 +223,9 @@ export default function PermitListPage() {
               </p>
             )}
           </div>
+          <p className="mt-2 text-xs text-gray-500">
+            * แสดงคำขอที่มีช่วงเวลาปฏิบัติงานครอบคลุมวันที่เลือก
+          </p>
         </div>
 
         {error && (
@@ -245,7 +251,7 @@ export default function PermitListPage() {
               />
             </svg>
             <p className="text-gray-600 mb-4">
-              {selectedDate ? 'ไม่พบรายการคำขอในวันที่เลือก' : 'ยังไม่มีรายการคำขอ'}
+              {selectedDate ? 'ไม่พบคำขอที่มีช่วงเวลาปฏิบัติงานในวันที่เลือก' : 'ยังไม่มีรายการคำขอ'}
             </p>
             {!selectedDate && (
               <button

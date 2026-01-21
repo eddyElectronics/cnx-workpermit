@@ -13,17 +13,8 @@ export default function PermitListPage() {
   const router = useRouter()
   const { user, liffProfile, clearUser } = useUserStore()
   const [permits, setPermits] = useState<WorkPermit[]>([])
-  const [filteredPermits, setFilteredPermits] = useState<WorkPermit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
-  // Get today's date in YYYY-MM-DD format
-  const getTodayDate = () => {
-    const today = new Date()
-    return today.toISOString().split('T')[0]
-  }
-  
-  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate())
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -52,7 +43,6 @@ export default function PermitListPage() {
         // Handle API response structure { data: [...] }
         const data = Array.isArray(result) ? result : (result as { data: WorkPermit[] })?.data || []
         setPermits(data)
-        setFilteredPermits(data)
       } catch (err) {
         console.error('Failed to load permits:', err)
         setError('ไม่สามารถโหลดข้อมูลได้')
@@ -63,38 +53,6 @@ export default function PermitListPage() {
 
     loadData()
   }, [user, liffProfile, router])
-
-  // Filter permits when selected date changes
-  useEffect(() => {
-    if (!selectedDate) {
-      setFilteredPermits(permits)
-      return
-    }
-
-    const filtered = permits.filter((permit) => {
-      const startDate = new Date(permit.StartDate)
-      const endDate = new Date(permit.EndDate)
-      const selected = new Date(selectedDate)
-      
-      // Set time to start and end of day for proper comparison
-      startDate.setHours(0, 0, 0, 0)
-      endDate.setHours(23, 59, 59, 999)
-      selected.setHours(0, 0, 0, 0)
-      
-      // Check if selected date is within the work period (StartDate to EndDate)
-      return selected >= startDate && selected <= endDate
-    })
-
-    setFilteredPermits(filtered)
-  }, [selectedDate, permits])
-
-  const handleShowAll = () => {
-    setSelectedDate('')
-  }
-
-  const handleToday = () => {
-    setSelectedDate(getTodayDate())
-  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -211,64 +169,14 @@ export default function PermitListPage() {
               >
                 แสดงทั้งหมด
               </button>
-            </div>
-          </div>
-          <div className="mt-3 flex items-center justify-between text-sm">
-            <p className="text-gray-600">
-              ทั้งหมด: <span className="font-semibold">{permits.length}</span> รายการ
-            </p>
-            {selectedDate && (
-              <p className="text-primary-600 font-medium">
-                วันที่ {format(new Date(selectedDate), 'dd MMM yyyy', { locale: th })}: <span className="font-semibold">{filteredPermits.length}</span> รายการ
-              </p>
-            )}
-          </div>
-          <p className="mt-2 text-xs text-gray-500">
-            * แสดงคำขอที่มีช่วงเวลาปฏิบัติงานครอบคลุมวันที่เลือก
-          </p>
-        </div>
-
-        {error && (
+         error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
           </div>
         )}
 
         {/* Permits List */}
-        {filteredPermits.length === 0 ? (
-          <div className="card text-center py-12">
-            <svg
-              className="w-16 h-16 mx-auto text-gray-400 mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <p className="text-gray-600 mb-4">
-              {selectedDate ? 'ไม่พบคำขอที่มีช่วงเวลาปฏิบัติงานในวันที่เลือก' : 'ยังไม่มีรายการคำขอ'}
-            </p>
-            {!selectedDate && (
-              <button
-                onClick={() => router.push('/permit/create')}
-                className="btn-primary mx-auto"
-              >
-                สร้างคำขอแรก
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredPermits.map((permit) => (
-              <div key={permit.PermitId} className="card hover:shadow-lg transition-shadow">
-                {/* Status Badge */}
-                <div className="flex items-start justify-between mb-3">
-                  <div>
+        {p<div>
                     <h3 className="font-bold text-gray-900 text-lg">
                       {permit.PermitNumber}
                     </h3>
@@ -300,21 +208,17 @@ export default function PermitListPage() {
                     <p className="font-medium text-gray-900">
                       {permit.CompanyName}
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">พื้นที่</p>
-                    <p className="font-medium text-gray-900">
-                      {permit.AreaName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">ประเภทงาน</p>
-                    <p className="font-medium text-gray-900">
-                      {permit.WorkTypeName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">ช่วงเวลา</p>
+                  </div>ยังไม่มีรายการคำขอ</p>
+            <button
+              onClick={() => router.push('/permit/create')}
+              className="btn-primary mx-auto"
+            >
+              สร้างคำขอแรก
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {p className="text-gray-500">ช่วงเวลา</p>
                     <p className="font-medium text-gray-900">
                       {permit.WorkShift}
                     </p>

@@ -97,7 +97,9 @@ export default function AdminPermitsPage() {
       return
     }
 
+    // Disable button by setting updatingId
     setUpdatingId(permitId)
+    
     try {
       // Find the permit to get details for notification
       const permit = permits.find(p => p.PermitId === permitId)
@@ -107,37 +109,37 @@ export default function AdminPermitsPage() {
       await apiService.updateWorkPermitStatus(permitId, newStatus, user.UserId)
       console.log('Status updated successfully in database')
       
-      // Step 2: Send LINE notification to user
-      if (permit) {
-        try {
-          console.log('Sending LINE notification to user...')
-          await fetch('/api/line/notify-user', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              lineUserId: permit.LineUserId,
-              permitNumber: permit.PermitNumber,
-              ownerName: permit.OwnerName,
-              companyName: permit.CompanyName,
-              area: permit.AreaName,
-              workType: permit.WorkTypeName,
-              status: newStatus,
-              approvedBy: user.FirstName + ' ' + user.LastName
-            }),
-          })
-          console.log('User notification sent successfully')
-        } catch (notifyErr) {
-          console.error('Failed to send user notification:', notifyErr)
-          // Don't block the main flow if notification fails
-        }
-      }
+      // Step 2: Update local state immediately after API success
+      setPermits(prevPermits => 
+        prevPermits.map(p => 
+          p.PermitId === permitId 
+            ? { ...p, Status: newStatus }
+            : p
+        )
+      )
+      console.log('Local state updated with new status')
       
-      // Step 3: Reload data from server to get updated status
-      console.log('Reloading permits from server...')
-      await loadPendingPermits(true)
-      console.log('Permits reloaded successfully')
+      // Step 3: Send LINE notification to user (don't wait)
+      if (permit) {
+        fetch('/api/line/notify-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            lineUserId: permit.LineUserId,
+            permitNumber: permit.PermitNumber,
+            ownerName: permit.OwnerName,
+            companyName: permit.CompanyName,
+            area: permit.AreaName,
+            workType: permit.WorkTypeName,
+            status: newStatus,
+            approvedBy: user.FirstName + ' ' + user.LastName
+          }),
+        })
+        .then(() => console.log('User notification sent successfully'))
+        .catch(notifyErr => console.error('Failed to send user notification:', notifyErr))
+      }
       
       // Step 4: Clear updating state and show success message
       setUpdatingId(null)
@@ -264,7 +266,12 @@ export default function AdminPermitsPage() {
                       })}
                     </p>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    permit.Status === PERMIT_STATUS.PENDING ? 'bg-yellow-100 text-yellow-800' :
+                    permit.Status === PERMIT_STATUS.APPROVED ? 'bg-green-100 text-green-800' :
+                    permit.Status === PERMIT_STATUS.REJECTED ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
                     {permit.Status}
                   </span>
                 </div>

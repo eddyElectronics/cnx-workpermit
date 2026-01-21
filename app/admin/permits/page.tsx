@@ -50,7 +50,10 @@ export default function AdminPermitsPage() {
     loadPendingPermits()
   }, [user, liffProfile, router])
 
-  const loadPendingPermits = async () => {
+  const loadPendingPermits = async (forceReload = false) => {
+    if (forceReload) {
+      setLoading(true)
+    }
     try {
       const result = await apiService.getAllWorkPermits()
       console.log('All permits result:', result)
@@ -58,6 +61,7 @@ export default function AdminPermitsPage() {
       // Handle API response structure { data: [...] }
       const data = Array.isArray(result) ? result : (result as { data: WorkPermit[] })?.data || []
       setPermits(data)
+      setError(null)
     } catch (err) {
       console.error('Failed to load permits:', err)
       setError('ไม่สามารถโหลดข้อมูลได้')
@@ -127,15 +131,15 @@ export default function AdminPermitsPage() {
         }
       }
       
-      // Reload list to show updated status
-      await loadPendingPermits()
+      // Force reload with loading indicator
+      setUpdatingId(null)
+      await loadPendingPermits(true)
       
-      // Show success message
-      alert(`${newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ'}เรียบร้อยแล้ว\nได้ส่งแจ้งเตือนไปยังผู้ขอใบอนุญาตแล้ว`)
+      // Show success message after reload
+      alert(`${newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ'}เรียบร้อยแล้ว\nได้ส่งแจ้งเตือนไปยังผู้ขอใบอนุญาตแล้ว\n\n✅ รีเฟรชข้อมูลเรียบร้อย`)
     } catch (err) {
       console.error('Failed to update status:', err)
       alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ')
-    } finally {
       setUpdatingId(null)
     }
   }
@@ -172,6 +176,17 @@ export default function AdminPermitsPage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => loadPendingPermits(true)}
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="รีเฟรชข้อมูล"
+            >
+              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
+            </button>
             <button
               onClick={() => router.push('/')}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"

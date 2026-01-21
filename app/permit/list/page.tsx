@@ -16,8 +16,14 @@ export default function PermitListPage() {
   const [filteredPermits, setFilteredPermits] = useState<WorkPermit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [startDate, setStartDate] = useState<string>('')
-  const [endDate, setEndDate] = useState<string>('')
+  
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  }
+  
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate())
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -58,39 +64,33 @@ export default function PermitListPage() {
     loadData()
   }, [user, liffProfile, router])
 
-  // Filter permits when date range changes
+  // Filter permits when selected date changes
   useEffect(() => {
-    if (!startDate && !endDate) {
+    if (!selectedDate) {
       setFilteredPermits(permits)
       return
     }
 
     const filtered = permits.filter((permit) => {
       const createdDate = new Date(permit.CreatedDate)
-      const start = startDate ? new Date(startDate) : null
-      const end = endDate ? new Date(endDate) : null
-
-      // Set time to start and end of day for proper comparison
-      if (start) start.setHours(0, 0, 0, 0)
-      if (end) end.setHours(23, 59, 59, 999)
+      const selected = new Date(selectedDate)
+      
+      // Compare only the date part (ignore time)
       createdDate.setHours(0, 0, 0, 0)
-
-      if (start && end) {
-        return createdDate >= start && createdDate <= end
-      } else if (start) {
-        return createdDate >= start
-      } else if (end) {
-        return createdDate <= end
-      }
-      return true
+      selected.setHours(0, 0, 0, 0)
+      
+      return createdDate.getTime() === selected.getTime()
     })
 
     setFilteredPermits(filtered)
-  }, [startDate, endDate, permits])
+  }, [selectedDate, permits])
 
-  const handleResetFilter = () => {
-    setStartDate('')
-    setEndDate('')
+  const handleShowAll = () => {
+    setSelectedDate('')
+  }
+
+  const handleToday = () => {
+    setSelectedDate(getTodayDate())
   }
 
   const getStatusColor = (status: string) => {
@@ -185,34 +185,34 @@ export default function PermitListPage() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            กรองตามวันที่สร้างคำขอ
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="md:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                วันที่เริ่มต้น
+                เลือกวันที่
               </label>
               <input
                 type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
                 className="input w-full"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                วันที่สิ้นสุด
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                min={startDate}
-                className="input w-full"
-              />
-            </div>
-            <div className="flex items-end">
+            <div className="md:col-span-2 flex gap-2 items-end">
               <button
-                onClick={handleResetFilter}
-                className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                onClick={handleToday}
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
               >
-                ล้างการกรอง
+                วันนี้
+              </button>
+              <button
+                onClick={handleShowAll}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+              >
+                แสดงทั้งหมด
               </button>
             </div>
           </div>
@@ -220,15 +220,9 @@ export default function PermitListPage() {
             <p className="text-gray-600">
               ทั้งหมด: <span className="font-semibold">{permits.length}</span> รายการ
             </p>
-            {(startDate || endDate) && (
+            {selectedDate && (
               <p className="text-primary-600 font-medium">
-                แสดง: <span className="font-semibold">{filteredPermits.length}</span> รายการ
-              </p>
-            )}
-          </div>
-        </div>
-
-        {error && (
+                วันที่ {format(new Date(selectedDate), 'dd MMM yyyy', { locale: th })}
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
           </div>
@@ -257,9 +251,9 @@ export default function PermitListPage() {
               <button
                 onClick={() => router.push('/permit/create')}
                 className="btn-primary mx-auto"
-              >
-                สร้างคำขอแรก
-              </button>
+              >electedDate ? 'ไม่พบรายการคำขอในวันที่เลือก' : 'ยังไม่มีรายการคำขอ'}
+            </p>
+            {!selecte
             )}
           </div>
         ) : (

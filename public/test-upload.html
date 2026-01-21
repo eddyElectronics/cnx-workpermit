@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test File Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            border: 2px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background: #0284c7;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0369a1;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e3a8a;
+        }
+        .files-list {
+            margin-top: 10px;
+        }
+        .file-item {
+            padding: 5px;
+            background: #f3f4f6;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test File Upload & Database Save</h1>
+        <p>ทดสอบการอัพโหลดไฟล์และบันทึกลง Database</p>
+        
+        <div>
+            <label><strong>Permit ID:</strong></label>
+            <input type="number" id="permitId" value="" style="width: 150px; margin-left: 10px;" placeholder="ระบุ Permit ID" />
+            <button onclick="loadPermitIds()" style="margin-left: 10px; padding: 5px 10px; background: #6366f1; font-size: 14px;">โหลด Permit IDs</button>
+            <div id="permitIdsList" style="margin-top: 10px; font-size: 14px; color: #666;"></div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <label><strong>เลือกไฟล์:</strong></label>
+            <input type="file" id="fileInput" multiple accept="image/jpeg,image/jpg,image/png,application/pdf" />
+            <div class="files-list" id="filesList"></div>
+        </div>
+        
+        <button id="uploadBtn" onclick="uploadFiles()">Upload Files</button>
+        <button onclick="checkDatabase()" style="margin-left: 10px; background: #059669;">Check Database</button>
+        <button onclick="clearResults()" style="margin-left: 10px; background: #6b7280;">Clear Results</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const filesList = document.getElementById('filesList');
+        const uploadBtn = document.getElementById('uploadBtn');
+        
+        // Auto load permit IDs on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadPermitIds();
+        });
+        
+        async function loadPermitIds() {
+            const permitIdsList = document.getElementById('permitIdsList');
+            permitIdsList.innerHTML = '⏳ กำลังโหลด Permit IDs...';
+            
+            try {
+                const response = await fetch('https://localhost:3000/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        database: 'CNXWorkPermit',
+                        query: `SELECT TOP 10 PermitId, PermitNumber, OwnerName, Status FROM WorkPermits ORDER BY PermitId DESC`
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.data && result.data.length > 0) {
+                    const permitId = document.getElementById('permitId');
+                    permitId.value = result.data[0].PermitId;
+                    
+                    let html = '📋 Permit IDs ที่มีอยู่: ';
+                    html += result.data.map(p => 
+                        `<span style="cursor: pointer; color: #0284c7; text-decoration: underline; margin: 0 5px;" onclick="document.getElementById('permitId').value=${p.PermitId}">${p.PermitId} (${p.PermitNumber})</span>`
+                    ).join(' | ');
+                    
+                    permitIdsList.innerHTML = html;
+                } else {
+                    permitIdsList.innerHTML = '⚠️  ไม่พบ WorkPermit ในระบบ - ต้องสร้างก่อน';
+                }
+            } catch (error) {
+                permitIdsList.innerHTML = '❌ ไม่สามารถโหลด Permit IDs: ' + error.message;
+            }
+        }
+        
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            filesList.innerHTML = '';
+            
+            if (files.length === 0) return;
+            
+            files.forEach((file, index) => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.textContent = `${index + 1}. ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                filesList.appendChild(div);
+            });
+        });
+        
+        async function uploadFiles() {
+            const permitId = document.getElementById('permitId').value;
+            const files = fileInput.files;
+            const resultDiv = document.getElementById('result');
+            
+            if (!permitId) {
+                showResult('❌ กรุณาระบุ Permit ID', 'error');
+                return;
+            }
+            
+            if (files.length === 0) {
+                showResult('❌ กรุณาเลือกไฟล์', 'error');
+                return;
+            }
+            
+            uploadBtn.disabled = true;
+            showResult('⏳ กำลังอัพโหลด...', 'info');
+            
+            try {
+                const formData = new FormData();
+                formData.append('permitId', permitId);
+                
+                for (let file of files) {
+                    formData.append('files', file);
+                }
+                
+                console.log('Uploading to:', 'https://localhost:3000/api/upload');
+                console.log('Permit ID:', permitId);
+                console.log('Files:', files.length);
+                
+                const response = await fetch('https://localhost:3000/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ อัพโหลดสำเร็จ!\n\n${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ อัพโหลดล้มเหลว!\n\n${JSON.stringify(result, null, 2)}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ เกิดข้อผิดพลาด!\n\n${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        }
+        
+        async function checkDatabase() {
+            const permitId = document.getElementById('permitId').value;
+            const resultDiv = document.getElementById('result');
+            
+            showResult('⏳ กำลังตรวจสอบฐานข้อมูล...', 'info');
+            
+            try {
+                const response = await fetch('https://localhost:3000/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        database: 'CNXWorkPermit',
+                        query: `SELECT * FROM WorkPermitDocuments WHERE PermitId = @PermitId ORDER BY UploadedDate DESC`,
+                        parameters: { PermitId: parseInt(permitId) }
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.data) {
+                    const count = Array.isArray(result.data) ? result.data.length : 0;
+                    showResult(`📊 พบเอกสาร ${count} รายการ\n\n${JSON.stringify(result.data, null, 2)}`, 'success');
+                } else {
+                    showResult(`⚠️  ไม่พบข้อมูล\n\n${JSON.stringify(result, null, 2)}`, 'info');
+                }
+                
+            } catch (error) {
+                showResult(`❌ เกิดข้อผิดพลาด!\n\n${error.message}`, 'error');
+            }
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+        
+        function clearResults() {
+            document.getElementById('result').innerHTML = '';
+            fileInput.value = '';
+            filesList.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

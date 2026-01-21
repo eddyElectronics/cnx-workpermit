@@ -105,6 +105,15 @@ export default function AdminPermitsPage() {
       // Update status
       await apiService.updateWorkPermitStatus(permitId, newStatus, user.UserId)
       
+      // Update local state immediately (optimistic update)
+      setPermits(prevPermits => 
+        prevPermits.map(p => 
+          p.PermitId === permitId 
+            ? { ...p, Status: newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ' }
+            : p
+        )
+      )
+      
       // Send LINE notification to user
       if (permit) {
         try {
@@ -131,16 +140,20 @@ export default function AdminPermitsPage() {
         }
       }
       
-      // Force reload with loading indicator
+      // Clear updating state
       setUpdatingId(null)
+      
+      // Reload from server to ensure data consistency
       await loadPendingPermits(true)
       
       // Show success message after reload
-      alert(`${newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ'}เรียบร้อยแล้ว\nได้ส่งแจ้งเตือนไปยังผู้ขอใบอนุญาตแล้ว\n\n✅ รีเฟรชข้อมูลเรียบร้อย`)
+      alert(`${newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ'}เรียบร้อยแล้ว\nได้ส่งแจ้งเตือนไปยังผู้ขอใบอนุญาตแล้ว`)
     } catch (err) {
       console.error('Failed to update status:', err)
       alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ')
       setUpdatingId(null)
+      // Reload to ensure data consistency even on error
+      await loadPendingPermits(true)
     }
   }
 

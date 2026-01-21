@@ -280,27 +280,27 @@ export default function AdminPermitsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                   <div>
                     <p className="text-xs text-gray-500">เจ้าของงาน</p>
-                    <p className="font-medium">{permit.OwnerName}</p>
+                    <p className="font-medium text-gray-900">{permit.OwnerName}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">บริษัท</p>
-                    <p className="font-medium">{permit.CompanyName}</p>
+                    <p className="font-medium text-gray-900">{permit.CompanyName}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">พื้นที่</p>
-                    <p className="font-medium">{permit.AreaName || '-'}</p>
+                    <p className="font-medium text-gray-900">{permit.AreaName || '-'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">ประเภทงาน</p>
-                    <p className="font-medium">{permit.WorkTypeName || '-'}</p>
+                    <p className="font-medium text-gray-900">{permit.WorkTypeName || '-'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">ช่วงเวลา</p>
-                    <p className="font-medium">{permit.WorkShift}</p>
+                    <p className="font-medium text-gray-900">{permit.WorkShift}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">ระยะเวลา</p>
-                    <p className="font-medium">
+                    <p className="font-medium text-gray-900">
                       {new Date(permit.StartDate).toLocaleDateString('th-TH')} -{' '}
                       {new Date(permit.EndDate).toLocaleDateString('th-TH')}
                     </p>
@@ -311,7 +311,7 @@ export default function AdminPermitsPage() {
                 {permit.Remarks && (
                   <div className="mb-4 p-3 bg-gray-50 rounded">
                     <p className="text-xs text-gray-500 mb-1">หมายเหตุ</p>
-                    <p className="text-sm">{permit.Remarks}</p>
+                    <p className="text-sm text-gray-900">{permit.Remarks}</p>
                   </div>
                 )}
 

@@ -186,7 +186,7 @@ export default function CreatePermitPage() {
         WorkShift: data.workShift,
         StartDate: data.startDate,
         EndDate: data.endDate,
-        Remarks: data.remarks || null,
+        Remarks: data.remarks || undefined,
       })) as any
       
       console.log('Work permit created - Full response:', result)

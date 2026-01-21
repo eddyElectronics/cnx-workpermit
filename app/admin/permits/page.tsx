@@ -99,24 +99,18 @@ export default function AdminPermitsPage() {
 
     setUpdatingId(permitId)
     try {
-      // Find the permit to get details
+      // Find the permit to get details for notification
       const permit = permits.find(p => p.PermitId === permitId)
       
-      // Update status
+      // Step 1: Update status in database (wait for API response)
+      console.log('Updating status in database...')
       await apiService.updateWorkPermitStatus(permitId, newStatus, user.UserId)
+      console.log('Status updated successfully in database')
       
-      // Update local state immediately (optimistic update)
-      setPermits(prevPermits => 
-        prevPermits.map(p => 
-          p.PermitId === permitId 
-            ? { ...p, Status: newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ' }
-            : p
-        )
-      )
-      
-      // Send LINE notification to user
+      // Step 2: Send LINE notification to user
       if (permit) {
         try {
+          console.log('Sending LINE notification to user...')
           await fetch('/api/line/notify-user', {
             method: 'POST',
             headers: {
@@ -140,20 +134,18 @@ export default function AdminPermitsPage() {
         }
       }
       
-      // Clear updating state
-      setUpdatingId(null)
-      
-      // Reload from server to ensure data consistency
+      // Step 3: Reload data from server to get updated status
+      console.log('Reloading permits from server...')
       await loadPendingPermits(true)
+      console.log('Permits reloaded successfully')
       
-      // Show success message after reload
+      // Step 4: Clear updating state and show success message
+      setUpdatingId(null)
       alert(`${newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ'}เรียบร้อยแล้ว\nได้ส่งแจ้งเตือนไปยังผู้ขอใบอนุญาตแล้ว`)
     } catch (err) {
       console.error('Failed to update status:', err)
-      alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ')
       setUpdatingId(null)
-      // Reload to ensure data consistency even on error
-      await loadPendingPermits(true)
+      alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ')
     }
   }
 

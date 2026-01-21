@@ -12,6 +12,7 @@ export default function AdminPermitsPage() {
   const router = useRouter()
   const { user, liffProfile, clearUser } = useUserStore()
   const [permits, setPermits] = useState<WorkPermit[]>([])
+  const [filteredPermits, setFilteredPermits] = useState<WorkPermit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
@@ -21,6 +22,7 @@ export default function AdminPermitsPage() {
   const [documents, setDocuments] = useState<any[]>([])
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [filterDate, setFilterDate] = useState<string>('')
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -49,6 +51,28 @@ export default function AdminPermitsPage() {
 
     loadPendingPermits()
   }, [user, liffProfile, router])
+
+  // Filter permits based on selected date
+  useEffect(() => {
+    if (!filterDate) {
+      setFilteredPermits(permits)
+      return
+    }
+
+    const filtered = permits.filter(permit => {
+      if (!permit.StartDate || !permit.EndDate) return false
+      
+      const selectedDate = new Date(filterDate)
+      const startDate = new Date(permit.StartDate)
+      const endDate = new Date(permit.EndDate)
+      
+      // Check if selected date falls within the work period
+      return selectedDate >= startDate && selectedDate <= endDate
+    })
+    
+    setFilteredPermits(filtered)
+    setCurrentPage(1) // Reset to first page when filtering
+  }, [permits, filterDate])
 
   const loadPendingPermits = async (forceReload = false) => {
     if (forceReload) {
@@ -151,11 +175,11 @@ export default function AdminPermitsPage() {
     }
   }
 
-  // Pagination
-  const totalPages = Math.ceil(permits.length / itemsPerPage)
+  // Pagination - use filteredPermits instead of permits
+  const totalPages = Math.ceil(filteredPermits.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const currentPermits = permits.slice(startIndex, endIndex)
+  const currentPermits = filteredPermits.slice(startIndex, endIndex)
   const pendingCount = permits.filter(p => p.Status === PERMIT_STATUS.PENDING).length
 
   if (loading) {
@@ -180,6 +204,7 @@ export default function AdminPermitsPage() {
             </h1>
             <p className="text-sm text-gray-600 mt-1">
               ทั้งหมด {permits.length} รายการ | รอตรวจสอบ {pendingCount} รายการ
+              {filterDate && ` | กรองแล้ว ${filteredPermits.length} รายการ`}
             </p>
           </div>
           <div className="flex gap-2">
@@ -205,6 +230,33 @@ export default function AdminPermitsPage() {
               className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
             >
               ออกจากระบบ
+            </button>
+          </div>
+        </div>
+
+        {/* Date Filter */}
+        <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <label className="text-sm font-medium text-gray-700">
+              กรองตามวันที่ในช่วงระยะเวลา:
+            </label>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="input px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={() => setFilterDate(new Date().toISOString().split('T')[0])}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              วันนี้
+            </button>
+            <button
+              onClick={() => setFilterDate('')}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+            >
+              แสดงทั้งหมด
             </button>
           </div>
         </div>
@@ -238,9 +290,11 @@ export default function AdminPermitsPage() {
         )}
 
         {/* Permits List */}
-        {permits.length === 0 ? (
+        {filteredPermits.length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
-            <p className="text-gray-500">ไม่มีคำขอเข้าปฏิบัติงาน</p>
+            <p className="text-gray-500">
+              {filterDate ? 'ไม่มีคำขอที่ตรงกับวันที่ที่เลือก' : 'ไม่มีคำขอเข้าปฏิบัติงาน'}
+            </p>
           </div>
         ) : (
           <>

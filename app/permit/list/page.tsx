@@ -13,8 +13,11 @@ export default function PermitListPage() {
   const router = useRouter()
   const { user, liffProfile, clearUser } = useUserStore()
   const [permits, setPermits] = useState<WorkPermit[]>([])
+  const [filteredPermits, setFilteredPermits] = useState<WorkPermit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -43,6 +46,7 @@ export default function PermitListPage() {
         // Handle API response structure { data: [...] }
         const data = Array.isArray(result) ? result : (result as { data: WorkPermit[] })?.data || []
         setPermits(data)
+        setFilteredPermits(data)
       } catch (err) {
         console.error('Failed to load permits:', err)
         setError('ไม่สามารถโหลดข้อมูลได้')
@@ -53,6 +57,41 @@ export default function PermitListPage() {
 
     loadData()
   }, [user, liffProfile, router])
+
+  // Filter permits when date range changes
+  useEffect(() => {
+    if (!startDate && !endDate) {
+      setFilteredPermits(permits)
+      return
+    }
+
+    const filtered = permits.filter((permit) => {
+      const createdDate = new Date(permit.CreatedDate)
+      const start = startDate ? new Date(startDate) : null
+      const end = endDate ? new Date(endDate) : null
+
+      // Set time to start and end of day for proper comparison
+      if (start) start.setHours(0, 0, 0, 0)
+      if (end) end.setHours(23, 59, 59, 999)
+      createdDate.setHours(0, 0, 0, 0)
+
+      if (start && end) {
+        return createdDate >= start && createdDate <= end
+      } else if (start) {
+        return createdDate >= start
+      } else if (end) {
+        return createdDate <= end
+      }
+      return true
+    })
+
+    setFilteredPermits(filtered)
+  }, [startDate, endDate, permits])
+
+  const handleResetFilter = () => {
+    setStartDate('')
+    setEndDate('')
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -136,6 +175,59 @@ export default function PermitListPage() {
           </div>
         )}
 
+        {/* Date Filter */}
+        <div className="card mb-6">
+          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            กรองตามวันที่สร้างคำขอ
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                วันที่เริ่มต้น
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="input w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                วันที่สิ้นสุด
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate}
+                className="input w-full"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={handleResetFilter}
+                className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+              >
+                ล้างการกรอง
+              </button>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between text-sm">
+            <p className="text-gray-600">
+              ทั้งหมด: <span className="font-semibold">{permits.length}</span> รายการ
+            </p>
+            {(startDate || endDate) && (
+              <p className="text-primary-600 font-medium">
+                แสดง: <span className="font-semibold">{filteredPermits.length}</span> รายการ
+              </p>
+            )}
+          </div>
+        </div>
+
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
@@ -143,7 +235,7 @@ export default function PermitListPage() {
         )}
 
         {/* Permits List */}
-        {permits.length === 0 ? (
+        {filteredPermits.length === 0 ? (
           <div className="card text-center py-12">
             <svg
               className="w-16 h-16 mx-auto text-gray-400 mb-4"
@@ -158,17 +250,21 @@ export default function PermitListPage() {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <p className="text-gray-600 mb-4">ยังไม่มีรายการคำขอ</p>
-            <button
-              onClick={() => router.push('/permit/create')}
-              className="btn-primary mx-auto"
-            >
-              สร้างคำขอแรก
-            </button>
+            <p className="text-gray-600 mb-4">
+              {startDate || endDate ? 'ไม่พบรายการคำขอในช่วงเวลาที่เลือก' : 'ยังไม่มีรายการคำขอ'}
+            </p>
+            {!startDate && !endDate && (
+              <button
+                onClick={() => router.push('/permit/create')}
+                className="btn-primary mx-auto"
+              >
+                สร้างคำขอแรก
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
-            {permits.map((permit) => (
+            {filteredPermits.map((permit) => (
               <div key={permit.PermitId} className="card hover:shadow-lg transition-shadow">
                 {/* Status Badge */}
                 <div className="flex items-start justify-between mb-3">

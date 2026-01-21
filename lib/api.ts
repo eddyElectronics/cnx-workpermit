@@ -225,6 +225,7 @@ export interface WorkPermit {
   PermitId: number
   PermitNumber: string
   UserId: number
+  LineUserId?: string
   OwnerName: string
   CompanyName: string
   AreaId: number
@@ -314,7 +315,7 @@ export const apiService = {
 
   // Get Pending Work Permits (Admin)
   getPendingWorkPermits: async (): Promise<WorkPermit[]> => {
-    return queryDatabase('SELECT * FROM vw_PendingWorkPermits ORDER BY CreatedDate DESC')
+    return queryDatabase('SELECT * FROM vw_WorkPermits ORDER BY CASE WHEN Status = N\'รอตรวจสอบ\' THEN 0 ELSE 1 END, CreatedDate DESC')
   },
 
   // Get All Work Permits (Admin)

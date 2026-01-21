@@ -95,13 +95,43 @@ export default function AdminPermitsPage() {
 
     setUpdatingId(permitId)
     try {
+      // Find the permit to get details
+      const permit = permits.find(p => p.PermitId === permitId)
+      
+      // Update status
       await apiService.updateWorkPermitStatus(permitId, newStatus, user.UserId)
       
-      // Reload list
+      // Send LINE notification to user
+      if (permit) {
+        try {
+          await fetch('/api/line/notify-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              lineUserId: permit.LineUserId,
+              permitNumber: permit.PermitNumber,
+              ownerName: permit.OwnerName,
+              companyName: permit.CompanyName,
+              area: permit.AreaName,
+              workType: permit.WorkTypeName,
+              status: newStatus,
+              approvedBy: user.FirstName + ' ' + user.LastName
+            }),
+          })
+          console.log('User notification sent successfully')
+        } catch (notifyErr) {
+          console.error('Failed to send user notification:', notifyErr)
+          // Don't block the main flow if notification fails
+        }
+      }
+      
+      // Reload list to show updated status
       await loadPendingPermits()
       
       // Show success message
-      alert(`${newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ'}เรียบร้อยแล้ว`)
+      alert(`${newStatus === PERMIT_STATUS.APPROVED ? 'อนุมัติ' : 'ไม่อนุมัติ'}เรียบร้อยแล้ว\nได้ส่งแจ้งเตือนไปยังผู้ขอใบอนุญาตแล้ว`)
     } catch (err) {
       console.error('Failed to update status:', err)
       alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ')

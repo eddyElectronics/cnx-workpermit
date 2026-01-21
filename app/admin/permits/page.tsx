@@ -227,7 +227,7 @@ export default function AdminPermitsPage() {
         <div className="bg-white rounded-xl shadow-md p-4 mb-6">
           <div className="flex items-center gap-4 flex-wrap">
             <label className="text-sm font-medium text-gray-700">
-              กรองตามวันที่ในช่วงระยะเวลา:
+              วันที่ในช่วงระยะเวลาขออนุญาต:
             </label>
             <input
               type="date"

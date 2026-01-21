@@ -216,7 +216,13 @@ export default function PermitListPage() {
             </p>
             {selectedDate && (
               <p className="text-primary-600 font-medium">
-                วันที่ {format(new Date(selectedDate), 'dd MMM yyyy', { locale: th })}
+                วันที่ {format(new Date(selectedDate), 'dd MMM yyyy', { locale: th })}: <span className="font-semibold">{filteredPermits.length}</span> รายการ
+              </p>
+            )}
+          </div>
+        </div>
+
+        {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
           </div>

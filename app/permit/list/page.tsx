@@ -239,15 +239,15 @@ export default function PermitListPage() {
               />
             </svg>
             <p className="text-gray-600 mb-4">
-              {startDate || endDate ? 'ไม่พบรายการคำขอในช่วงเวลาที่เลือก' : 'ยังไม่มีรายการคำขอ'}
+              {selectedDate ? 'ไม่พบรายการคำขอในวันที่เลือก' : 'ยังไม่มีรายการคำขอ'}
             </p>
-            {!startDate && !endDate && (
+            {!selectedDate && (
               <button
                 onClick={() => router.push('/permit/create')}
                 className="btn-primary mx-auto"
-              >electedDate ? 'ไม่พบรายการคำขอในวันที่เลือก' : 'ยังไม่มีรายการคำขอ'}
-            </p>
-            {!selecte
+              >
+                สร้างคำขอแรก
+              </button>
             )}
           </div>
         ) : (

@@ -247,12 +247,6 @@ export default function AdminPermitsPage() {
               className="input px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
-              onClick={() => setFilterDate(new Date().toISOString().split('T')[0])}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-            >
-              วันนี้
-            </button>
-            <button
               onClick={() => setFilterDate('')}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
             >

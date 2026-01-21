@@ -136,47 +136,43 @@ export default function PermitListPage() {
           </div>
         )}
 
-        {/* Date Filter */}
-        <div className="card mb-6">
-          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            กรองตามช่วงเวลาปฏิบัติงาน
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                เลือกวันที่
-              </label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="input w-full"
-              />
-            </div>
-            <div className="md:col-span-2 flex gap-2 items-end">
-              <button
-                onClick={handleToday}
-                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
-              >
-                วันนี้
-              </button>
-              <button
-                onClick={handleShowAll}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
-              >
-                แสดงทั้งหมด
-              </button>
-         error && (
+        {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
           </div>
         )}
 
         {/* Permits List */}
-        {p<div>
+        {permits.length === 0 ? (
+          <div className="card text-center py-12">
+            <svg
+              className="w-16 h-16 mx-auto text-gray-400 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <p className="text-gray-600 mb-4">ยังไม่มีรายการคำขอ</p>
+            <button
+              onClick={() => router.push('/permit/create')}
+              className="btn-primary mx-auto"
+            >
+              สร้างคำขอแรก
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {permits.map((permit) => (
+              <div key={permit.PermitId} className="card hover:shadow-lg transition-shadow">
+                {/* Status Badge */}
+                <div className="flex items-start justify-between mb-3">
+                  <div>
                     <h3 className="font-bold text-gray-900 text-lg">
                       {permit.PermitNumber}
                     </h3>
@@ -208,17 +204,21 @@ export default function PermitListPage() {
                     <p className="font-medium text-gray-900">
                       {permit.CompanyName}
                     </p>
-                  </div>ยังไม่มีรายการคำขอ</p>
-            <button
-              onClick={() => router.push('/permit/create')}
-              className="btn-primary mx-auto"
-            >
-              สร้างคำขอแรก
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {p className="text-gray-500">ช่วงเวลา</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">พื้นที่</p>
+                    <p className="font-medium text-gray-900">
+                      {permit.AreaName}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">ประเภทงาน</p>
+                    <p className="font-medium text-gray-900">
+                      {permit.WorkTypeName}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">ช่วงเวลา</p>
                     <p className="font-medium text-gray-900">
                       {permit.WorkShift}
                     </p>

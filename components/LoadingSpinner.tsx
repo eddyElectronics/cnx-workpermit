@@ -9,16 +9,16 @@ export default function LoadingSpinner({
 }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
-      <div className="text-center">
-        <div className="relative w-full max-w-xs h-24 mx-auto mb-4 overflow-hidden">
+      <div className="text-center w-full px-4">
+        <div className="relative w-full max-w-3xl h-20 mx-auto mb-4 overflow-hidden">
           {/* Airplane flying animation from left to right */}
           <div className="absolute left-0 animate-[fly_2s_ease-in-out_infinite]">
             <Image
               src="/images/airplane.png"
               alt="Loading"
-              width={96}
-              height={96}
-              className="w-24 h-24 object-contain"
+              width={64}
+              height={64}
+              className="w-16 h-16 object-contain"
               priority
             />
           </div>
@@ -29,7 +29,7 @@ export default function LoadingSpinner({
       <style jsx>{`
         @keyframes fly {
           0% {
-            transform: translateX(-100px);
+            transform: translateX(-80px);
             opacity: 0;
           }
           20% {
@@ -39,7 +39,7 @@ export default function LoadingSpinner({
             opacity: 1;
           }
           100% {
-            transform: translateX(calc(100vw - 100px));
+            transform: translateX(calc(100vw - 80px));
             opacity: 0;
           }
         }

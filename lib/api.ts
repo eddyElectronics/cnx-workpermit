@@ -366,12 +366,4 @@ export const apiService = {
       FileSize: fileSize,
     })
   },
-
-  // Get Permit Documents
-  getPermitDocuments: async (permitId: number) => {
-    return queryDatabase(
-      'SELECT * FROM [dbo].[WorkPermitDocuments] WHERE [PermitId] = @PermitId ORDER BY [UploadedDate] DESC',
-      { PermitId: permitId }
-    )
-  },
 }

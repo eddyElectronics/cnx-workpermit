@@ -102,16 +102,63 @@ export async function POST(request: Request) {
     console.log('=== API Success ===')
     console.log('Response data type:', typeof data)
     console.log('Has data:', !!data)
-    console.log('Data keys:', data && typeof data === 'object' ? Object.keys(data) : 'N/A')
-    console.log('Data:', JSON.stringify(data, null, 2))
+    
+    // Safely get keys
+    let dataKeys = 'N/A'
+    try {
+      if (data && typeof data === 'object' && data !== null) {
+        dataKeys = Object.keys(data).join(', ')
+      }
+    } catch (e) {
+      console.error('Error getting data keys:', e)
+    }
+    
+    console.log('Data keys:', dataKeys)
+    
+    // Safely stringify data
+    let dataString = 'Unable to stringify'
+    try {
+      dataString = JSON.stringify(data, null, 2)
+    } catch (e) {
+      console.error('Error stringifying data:', e)
+      dataString = String(data)
+    }
+    
+    console.log('Data:', dataString)
+    
+    // Validate and clean response data
+    if (!data || data === null) {
+      console.warn('API returned null or undefined, returning empty data structure')
+      return NextResponse.json({ data: [] })
+    }
     
     return NextResponse.json(data)
     
   } catch (error: unknown) {
-    console.error('Proxy error:', error)
-    const message = error instanceof Error ? error.message : 'Proxy request failed'
+    console.error('=== Proxy Catch Error ===')
+    console.error('Error type:', typeof error)
+    console.error('Error:', error)
+    
+    let message = 'Proxy request failed'
+    let details = null
+    
+    if (error instanceof Error) {
+      message = error.message
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    
+    if (error && typeof error === 'object') {
+      console.error('Error object keys:', Object.keys(error))
+      details = JSON.stringify(error, Object.getOwnPropertyNames(error))
+    }
+    
     return NextResponse.json(
-      { error: message },
+      { 
+        success: false,
+        error: message,
+        details: details 
+      },
       { status: 500 }
     )
   }

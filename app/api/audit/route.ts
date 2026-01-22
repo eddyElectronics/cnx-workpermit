@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { apiClient } from '@/lib/api'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,75 +42,53 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Call stored procedure to create audit via proxy
-    const apiUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/proxy`
-    console.log('Calling audit API:', apiUrl)
-    console.log('Audit parameters:', { permitId, auditedBy })
-    
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        procedure: 'usp_CreateWorkPermitAudit',
-        parameters: {
-          PermitId: permitId,
-          AuditedBy: auditedBy,
-          Helmet: helmet ? 1 : 0,
-          EarPlugs: earPlugs ? 1 : 0,
-          Glasses: glasses ? 1 : 0,
-          Mask: mask ? 1 : 0,
-          ChemicalSuit: chemicalSuit ? 1 : 0,
-          Gloves: gloves ? 1 : 0,
-          SafetyShoes: safetyShoes ? 1 : 0,
-          Belt: belt ? 1 : 0,
-          SafetyRope: safetyRope ? 1 : 0,
-          ReflectiveVest: reflectiveVest ? 1 : 0,
-          AreaBarrier: areaBarrier ? 1 : 0,
-          EquipmentStrength: equipmentStrength ? 1 : 0,
-          StandardInstallation: standardInstallation ? 1 : 0,
-          ToolReadiness: toolReadiness ? 1 : 0,
-          FireExtinguisher: fireExtinguisher ? 1 : 0,
-          ElectricalCutoff: electricalCutoff ? 1 : 0,
-          AlarmSystemOff: alarmSystemOff ? 1 : 0,
-          UndergroundCheck: undergroundCheck ? 1 : 0,
-          ChemicalCheck: chemicalCheck ? 1 : 0,
-          PressureCheck: pressureCheck ? 1 : 0,
-          Authorizer: authorizer ? 1 : 0,
-          Assistant: assistant ? 1 : 0,
-          Supervisor: supervisor ? 1 : 0,
-          Worker: worker ? 1 : 0,
-          Remarks: remarks || null
-        }
-      })
+    console.log('Creating audit for permit:', permitId, 'by user:', auditedBy)
+
+    // Call stored procedure to create audit directly
+    const response = await apiClient.post('', {
+      procedure: 'usp_CreateWorkPermitAudit',
+      parameters: {
+        PermitId: permitId,
+        AuditedBy: auditedBy,
+        Helmet: helmet ? 1 : 0,
+        EarPlugs: earPlugs ? 1 : 0,
+        Glasses: glasses ? 1 : 0,
+        Mask: mask ? 1 : 0,
+        ChemicalSuit: chemicalSuit ? 1 : 0,
+        Gloves: gloves ? 1 : 0,
+        SafetyShoes: safetyShoes ? 1 : 0,
+        Belt: belt ? 1 : 0,
+        SafetyRope: safetyRope ? 1 : 0,
+        ReflectiveVest: reflectiveVest ? 1 : 0,
+        AreaBarrier: areaBarrier ? 1 : 0,
+        EquipmentStrength: equipmentStrength ? 1 : 0,
+        StandardInstallation: standardInstallation ? 1 : 0,
+        ToolReadiness: toolReadiness ? 1 : 0,
+        FireExtinguisher: fireExtinguisher ? 1 : 0,
+        ElectricalCutoff: electricalCutoff ? 1 : 0,
+        AlarmSystemOff: alarmSystemOff ? 1 : 0,
+        UndergroundCheck: undergroundCheck ? 1 : 0,
+        ChemicalCheck: chemicalCheck ? 1 : 0,
+        PressureCheck: pressureCheck ? 1 : 0,
+        Authorizer: authorizer ? 1 : 0,
+        Assistant: assistant ? 1 : 0,
+        Supervisor: supervisor ? 1 : 0,
+        Worker: worker ? 1 : 0,
+        Remarks: remarks || null
+      }
     })
 
-    console.log('Response status:', response.status)
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('API Error response:', errorText)
-      let errorData
-      try {
-        errorData = JSON.parse(errorText)
-      } catch {
-        errorData = { error: errorText }
-      }
-      throw new Error(errorData.error || `API Error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log('Audit created successfully:', data)
-    return NextResponse.json({ success: true, data })
+    console.log('Audit created successfully')
+    return NextResponse.json({ success: true, data: response.data })
   } catch (error: any) {
-    console.error('Audit creation error:', error)
-    console.error('Error stack:', error.stack)
+    console.error('Audit creation error:', error.message)
+    console.error('Error details:', error.response?.data || error)
     return NextResponse.json(
       { error: error.message || 'Failed to create audit' },
       { status: 500 }
     )
   }
+}
 }
 
 export async function GET(request: NextRequest) {
@@ -124,29 +103,21 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Call stored procedure to get audits via proxy
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/proxy`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        procedure: 'usp_GetWorkPermitAudits',
-        parameters: {
-          PermitId: parseInt(permitId)
-        }
-      })
+    console.log('Getting audits for permit:', permitId)
+
+    // Call stored procedure to get audits directly
+    const response = await apiClient.post('', {
+      procedure: 'usp_GetWorkPermitAudits',
+      parameters: {
+        PermitId: parseInt(permitId)
+      }
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || 'Failed to get audits')
-    }
-
-    const data = await response.json()
-    return NextResponse.json({ success: true, data })
+    console.log('Audits retrieved successfully')
+    return NextResponse.json({ success: true, data: response.data })
   } catch (error: any) {
-    console.error('Get audits error:', error)
+    console.error('Get audits error:', error.message)
+    console.error('Error details:', error.response?.data || error)
     return NextResponse.json(
       { error: error.message || 'Failed to get audits' },
       { status: 500 }

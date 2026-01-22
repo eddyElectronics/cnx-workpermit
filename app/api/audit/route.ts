@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating audit for permit:', permitId, 'by user:', auditedBy)
 
-    // Call external API directly with proper headers
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://api.airportthai.co.th/proxy/api'}/query`
-    const apiKey = process.env.AOT_API_KEY || ''
+    // Call external API with procedure endpoint
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.airportthai.co.th/proxy/api'}/procedure`
+    const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -95,8 +95,8 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    console.log('Audit created successfully')
-    return NextResponse.json({ success: true, data: data.data })
+    console.log('Audit created successfully:', data)
+    return NextResponse.json({ success: true, data: data.data || data })
   } catch (error: any) {
     console.error('Audit creation error:', error.message)
     console.error('Error details:', error)
@@ -121,9 +121,9 @@ export async function GET(request: NextRequest) {
 
     console.log('Getting audits for permit:', permitId)
 
-    // Call external API directly with proper headers
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://api.airportthai.co.th/proxy/api'}/query`
-    const apiKey = process.env.AOT_API_KEY || ''
+    // Call external API with procedure endpoint
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.airportthai.co.th/proxy/api'}/procedure`
+    const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -147,8 +147,8 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json()
-    console.log('Audits retrieved successfully')
-    return NextResponse.json({ success: true, data: data.data })
+    console.log('Audits retrieved successfully:', data)
+    return NextResponse.json({ success: true, data: data.data || data })
   } catch (error: any) {
     console.error('Get audits error:', error.message)
     console.error('Error details:', error)

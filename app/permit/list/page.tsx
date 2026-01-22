@@ -18,6 +18,7 @@ export default function PermitListPage() {
   const [editingName, setEditingName] = useState(false)
   const [newFullName, setNewFullName] = useState('')
   const [savingName, setSavingName] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -63,7 +64,19 @@ export default function PermitListPage() {
       setSavingName(false)
     }
   }
+const handleCopyLineUserId = async () => {
+    if (!user?.LineUserId) return
+    
+    try {
+      await navigator.clipboard.writeText(user.LineUserId)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
 
+  
   useEffect(() => {
     if (!user || !liffProfile) {
       router.push('/')
@@ -184,6 +197,35 @@ export default function PermitListPage() {
                           setEditingName(false)
                           setNewFullName('')
                         }}
+                  
+                  {/* LINE User ID */}
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-xs text-gray-400">LINE ID:</span>
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+                      {user.LineUserId}
+                    </code>
+                    <button
+                      onClick={handleCopyLineUserId}
+                      className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded transition-colors flex items-center gap-1"
+                      title="Copy LINE User ID"
+                    >
+                      {copied ? (
+                        <>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
                         className="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm"
                       >
                         ✕

@@ -59,6 +59,7 @@ export default function AdminPermitsPage() {
     auditDate: string
     isExisting: boolean
   } | null>(null)
+  const [auditStatuses, setAuditStatuses] = useState<{ [key: number]: boolean }>({})
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -121,6 +122,27 @@ export default function AdminPermitsPage() {
       // Handle API response structure { data: [...] }
       const data = Array.isArray(result) ? result : (result as { data: WorkPermit[] })?.data || []
       setPermits(data)
+      
+      // Load audit status for approved permits
+      const approvedPermits = data.filter((p: WorkPermit) => p.Status === PERMIT_STATUS.APPROVED)
+      const auditStatusMap: { [key: number]: boolean } = {}
+      
+      await Promise.all(
+        approvedPermits.map(async (permit: WorkPermit) => {
+          try {
+            const response = await fetch(`/api/audit?permitId=${permit.PermitId}`)
+            if (response.ok) {
+              const result = await response.json()
+              auditStatusMap[permit.PermitId] = result.success && result.data && result.data.length > 0
+            }
+          } catch (err) {
+            console.error(`Failed to check audit status for permit ${permit.PermitId}:`, err)
+            auditStatusMap[permit.PermitId] = false
+          }
+        })
+      )
+      
+      setAuditStatuses(auditStatusMap)
       setError(null)
     } catch (err) {
       console.error('Failed to load permits:', err)
@@ -362,6 +384,12 @@ export default function AdminPermitsPage() {
       const result = await response.json()
       console.log('Audit saved successfully:', result)
       
+      // Update audit status for this permit
+      setAuditStatuses(prev => ({
+        ...prev,
+        [auditPermitId]: true
+      }))
+      
       alert('บันทึกการตรวจสอบเรียบร้อยแล้ว')
       setAuditPermitId(null)
     } catch (error: any) {
@@ -588,9 +616,13 @@ export default function AdminPermitsPage() {
                   <div className="flex gap-3 pt-4 border-t">
                     <button
                       onClick={() => handleOpenAudit(permit.PermitId)}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${
+                        auditStatuses[permit.PermitId]
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-yellow-600 hover:bg-yellow-700'
+                      }`}
                     >
-                      🔍 ตรวจสอบ
+                      {auditStatuses[permit.PermitId] ? '✓ ตรวจสอบแล้ว' : '⏳ รอตรวจสอบ'}
                     </button>
                   </div>
                 )}

@@ -376,23 +376,10 @@ export default function CreatePermitPage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Owner Name */}
-            <div>
-              <label className="label">
-                ชื่อเจ้าของงาน <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                className="input"
-                placeholder="ระบุชื่อเจ้าของงาน"
-                {...register('ownerName')}
-              />
-              {errors.ownerName && (
-                <p className="error-text">{errors.ownerName.message}</p>
-              )}
-            </div>
+            {/* Owner Name - Hidden */}
+            <input type="hidden" {...register('ownerName')} />
 
-            {/* Company Name */}
+            {/* Company Name */
             <div>
               <label className="label">
                 ชื่อบริษัท <span className="text-red-500">*</span>
@@ -411,7 +398,7 @@ export default function CreatePermitPage() {
             {/* Area */}
             <div>
               <label className="label">
-                พื้นที่ <span className="text-red-500">*</span>
+                พื้นที่เข้าทำงาน <span className="text-red-500">*</span>
               </label>
               <select className="input" {...register('areaId')}>
                 <option value="">-- เลือกพื้นที่ --</option>

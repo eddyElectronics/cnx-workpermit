@@ -379,7 +379,23 @@ export default function CreatePermitPage() {
             {/* Owner Name - Hidden */}
             <input type="hidden" {...register('ownerName')} />
 
-            {/* Company Name */
+            {/* Company Name */}
+            <div>
+              <label className="label">
+                ชื่อบริษัท <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                className="input"
+                placeholder="ระบุชื่อบริษัท"
+                {...register('companyName')}
+              />
+              {errors.companyName && (
+                <p className="error-text">{errors.companyName.message}</p>
+              )}
+            </div>
+
+            {/* Area */}
             <div>
               <label className="label">
                 ชื่อบริษัท <span className="text-red-500">*</span>

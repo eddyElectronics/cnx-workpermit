@@ -398,22 +398,6 @@ export default function CreatePermitPage() {
             {/* Area */}
             <div>
               <label className="label">
-                ชื่อบริษัท <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                className="input"
-                placeholder="ระบุชื่อบริษัท"
-                {...register('companyName')}
-              />
-              {errors.companyName && (
-                <p className="error-text">{errors.companyName.message}</p>
-              )}
-            </div>
-
-            {/* Area */}
-            <div>
-              <label className="label">
                 พื้นที่เข้าทำงาน <span className="text-red-500">*</span>
               </label>
               <select className="input" {...register('areaId')}>

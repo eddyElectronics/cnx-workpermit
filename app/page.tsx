@@ -148,69 +148,70 @@ export default function Home() {
 
         {/* Main Content */}
         <div className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="max-w-md w-full">
-          <div className="card text-center">
-            {/* App Logo/Icon */}
-            <div className="w-24 h-24 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg
-                className="w-12 h-12 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="max-w-md w-full">
+            <div className="card text-center">
+              {/* App Logo/Icon */}
+              <div className="w-24 h-24 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg
+                  className="w-12 h-12 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+
+              {/* App Title */}
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                ระบบคำขอเข้าปฏิบัติงาน
+              </h1>
+              <p className="text-gray-600 mb-8">
+                ท่าอากาศยานเชียงใหม่
+              </p>
+
+              {/* Error Message */}
+              {error && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Login Button with LINE Logo */}
+              <button
+                onClick={handleLogin}
+                className="w-full bg-[#06C755] hover:bg-[#00B900] text-white font-medium py-3.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-3 shadow-md"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" />
+                </svg>
+                เข้าสู่ระบบด้วย LINE
+              </button>
+
+              {/* Safety Rules Button */}
+              <a
+                href="https://safetycnx.wixsite.com/safetycnx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 btn-secondary w-full flex items-center justify-center gap-3"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span className="text-sm">กฎ ระเบียบ ข้อบังคับและวิธีการปฏิบัติงาน</span>
+              </a>
+
+              <p className="mt-6 text-sm text-gray-500">
+                กรุณาเข้าสู่ระบบด้วย LINE<br />เพื่อใช้งานระบบคำขอเข้าปฏิบัติงาน
+              </p>
             </div>
-
-            {/* App Title */}
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              ระบบคำขอเข้าปฏิบัติงาน
-            </h1>
-            <p className="text-gray-600 mb-8">
-              ท่าอากาศยานเชียงใหม่
-            </p>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Login Button with LINE Logo */}
-          <button
-            onClick={handleLogin}
-            className="w-full bg-[#06C755] hover:bg-[#00B900] text-white font-medium py-3.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-3 shadow-md"
-          >
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" />
-            </svg>
-            เข้าสู่ระบบด้วย LINE
-          </button>
-
-          {/* Safety Rules Button */}
-          <a
-            href="https://safetycnx.wixsite.com/safetycnx"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 btn-secondary w-full flex items-center justify-center gap-3"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <span className="text-sm">กฎ ระเบียบ ข้อบังคับและวิธีการปฏิบัติงาน</span>
-          </a>
-
-          <p className="mt-6 text-sm text-gray-500">
-            กรุณาเข้าสู่ระบบด้วย LINE<br />เพื่อใช้งานระบบคำขอเข้าปฏิบัติงาน
-          </p>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   )

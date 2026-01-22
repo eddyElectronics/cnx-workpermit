@@ -148,6 +148,11 @@ export default function CreatePermitPage() {
     setUploadedFiles(prev => [...prev, ...fileArray])
   }
 
+  const handleUploadClick = () => {
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement
+    fileInput?.click()
+  }
+
   const removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
   }
@@ -490,16 +495,28 @@ export default function CreatePermitPage() {
 
             {/* File Upload */}
             <div>
-              <label className="label">
-                อัพโหลดเอกสารประกอบ
-              </label>
+              <label className="label">อัพโหลดเอกสารประกอบ</label>
               <input
+                id="file-upload"
                 type="file"
                 multiple
                 accept="image/jpeg,image/jpg,image/png,application/pdf"
                 onChange={handleFileChange}
-                className="input"
+                className="hidden"
               />
+              <button
+                type="button"
+                onClick={handleUploadClick}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                <Image 
+                  src="/images/upload.png" 
+                  alt="Upload" 
+                  width={24} 
+                  height={24}
+                />
+                เลือกไฟล์
+              </button>
               <p className="text-xs text-gray-500 mt-1">
                 รองรับไฟล์ JPG, PNG, PDF (สูงสุด 10MB ต่อไฟล์)
               </p>

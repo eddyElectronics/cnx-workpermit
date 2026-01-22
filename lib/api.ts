@@ -256,14 +256,27 @@ export const apiService = {
       console.log('=== registerUser called ===')
       console.log('Input data:', JSON.stringify(data, null, 2))
       
-      const result = await executeProcedure('usp_RegisterUser', {
+      // Build parameters object, only including fields with actual values
+      // The backend API cannot handle null values properly
+      const parameters: Record<string, string> = {
         LineUserId: data.LineUserId,
         CompanyName: data.CompanyName,
-        Department: data.Department || null,
         FullName: data.FullName,
         PhoneNumber: data.PhoneNumber,
-        Email: data.Email || null,
-      })
+      }
+      
+      // Only add optional fields if they have values
+      if (data.Department && data.Department.trim()) {
+        parameters.Department = data.Department.trim()
+      }
+      
+      if (data.Email && data.Email.trim()) {
+        parameters.Email = data.Email.trim()
+      }
+      
+      console.log('Cleaned parameters (nulls omitted):', JSON.stringify(parameters, null, 2))
+      
+      const result = await executeProcedure('usp_RegisterUser', parameters)
       
       console.log('=== registerUser result ===')
       console.log('Result type:', typeof result)
@@ -335,7 +348,8 @@ export const apiService = {
     EndDate: string
     Remarks?: string
   }) => {
-    return executeProcedure('usp_CreateWorkPermit', {
+    // Build parameters object, only including fields with actual values
+    const parameters: Record<string, any> = {
       UserId: data.UserId,
       OwnerName: data.OwnerName,
       CompanyName: data.CompanyName,
@@ -344,8 +358,14 @@ export const apiService = {
       WorkShift: data.WorkShift,
       StartDate: data.StartDate,
       EndDate: data.EndDate,
-      Remarks: data.Remarks || null,
-    })
+    }
+    
+    // Only add Remarks if it has a value
+    if (data.Remarks && data.Remarks.trim()) {
+      parameters.Remarks = data.Remarks.trim()
+    }
+    
+    return executeProcedure('usp_CreateWorkPermit', parameters)
   },
 
   // Get User's Work Permits

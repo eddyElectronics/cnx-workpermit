@@ -6,6 +6,8 @@ export async function POST(request: NextRequest) {
     const {
       permitId,
       auditedBy,
+      auditedByName,
+      auditDate,
       helmet,
       earPlugs,
       glasses,
@@ -43,6 +45,39 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating audit for permit:', permitId, 'by user:', auditedBy)
 
+    // Build parameters - all checkboxes default to false if not provided
+    const parameters: any = {
+      PermitId: permitId,
+      AuditedBy: auditedBy,
+      Helmet: helmet ?? false,
+      EarPlugs: earPlugs ?? false,
+      Glasses: glasses ?? false,
+      Mask: mask ?? false,
+      ChemicalSuit: chemicalSuit ?? false,
+      Gloves: gloves ?? false,
+      SafetyShoes: safetyShoes ?? false,
+      Belt: belt ?? false,
+      SafetyRope: safetyRope ?? false,
+      ReflectiveVest: reflectiveVest ?? false,
+      AreaBarrier: areaBarrier ?? false,
+      EquipmentStrength: equipmentStrength ?? false,
+      StandardInstallation: standardInstallation ?? false,
+      ToolReadiness: toolReadiness ?? false,
+      FireExtinguisher: fireExtinguisher ?? false,
+      ElectricalCutoff: electricalCutoff ?? false,
+      AlarmSystemOff: alarmSystemOff ?? false,
+      UndergroundCheck: undergroundCheck ?? false,
+      ChemicalCheck: chemicalCheck ?? false,
+      PressureCheck: pressureCheck ?? false,
+      Authorizer: authorizer ?? false,
+      Assistant: assistant ?? false,
+      Supervisor: supervisor ?? false,
+      Worker: worker ?? false
+    }
+
+    // Add optional remarks field only
+    if (remarks) parameters.Remarks = remarks
+
     // Call external API with procedure endpoint
     const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.airportthai.co.th/proxy/api'}/procedure`
     const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
@@ -56,35 +91,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         database: 'CNXWorkPermit',
         procedure: 'usp_CreateWorkPermitAudit',
-        parameters: {
-          PermitId: permitId,
-          AuditedBy: auditedBy,
-          Helmet: helmet ? true : false,
-          EarPlugs: earPlugs ? true : false,
-          Glasses: glasses ? true : false,
-          Mask: mask ? true : false,
-          ChemicalSuit: chemicalSuit ? true : false,
-          Gloves: gloves ? true : false,
-          SafetyShoes: safetyShoes ? true : false,
-          Belt: belt ? true : false,
-          SafetyRope: safetyRope ? true : false,
-          ReflectiveVest: reflectiveVest ? true : false,
-          AreaBarrier: areaBarrier ? true : false,
-          EquipmentStrength: equipmentStrength ? true : false,
-          StandardInstallation: standardInstallation ? true : false,
-          ToolReadiness: toolReadiness ? true : false,
-          FireExtinguisher: fireExtinguisher ? true : false,
-          ElectricalCutoff: electricalCutoff ? true : false,
-          AlarmSystemOff: alarmSystemOff ? true : false,
-          UndergroundCheck: undergroundCheck ? true : false,
-          ChemicalCheck: chemicalCheck ? true : false,
-          PressureCheck: pressureCheck ? true : false,
-          Authorizer: authorizer ? true : false,
-          Assistant: assistant ? true : false,
-          Supervisor: supervisor ? true : false,
-          Worker: worker ? true : false,
-          ...(remarks && { Remarks: remarks })
-        }
+        parameters
       })
     })
 

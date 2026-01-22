@@ -69,15 +69,21 @@ export default function RegisterPage() {
 
     try {
       console.log('Starting registration...')
+      console.log('Form data:', data)
       
-      const regResult = (await apiService.registerUser({
+      // Clean and validate parameters before sending
+      const registerParams = {
         LineUserId: liffProfile.userId,
-        CompanyName: data.companyName,
-        Department: data.department,
-        FullName: data.fullName,
-        PhoneNumber: data.phoneNumber,
-        Email: data.email,
-      })) as { data: Array<{ UserId: number; Status: string }> }
+        CompanyName: data.companyName.trim(),
+        Department: data.department?.trim() || undefined,
+        FullName: data.fullName.trim(),
+        PhoneNumber: data.phoneNumber.trim(),
+        Email: data.email?.trim() || undefined,
+      }
+      
+      console.log('Cleaned parameters:', registerParams)
+      
+      const regResult = (await apiService.registerUser(registerParams)) as { data: Array<{ UserId: number; Status: string }> }
 
       console.log('Registration result:', regResult)
       

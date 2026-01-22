@@ -92,23 +92,34 @@ export default function AdminPermitsPage() {
 
   // Filter permits based on selected date
   useEffect(() => {
-    if (!filterDate) {
-      setFilteredPermits(permits)
-      return
+    let filtered = permits
+    
+    if (filterDate) {
+      filtered = permits.filter(permit => {
+        if (!permit.StartDate || !permit.EndDate) return false
+        
+        const selectedDate = new Date(filterDate)
+        const startDate = new Date(permit.StartDate)
+        const endDate = new Date(permit.EndDate)
+        
+        // Check if selected date falls within the work period
+        return selectedDate >= startDate && selectedDate <= endDate
+      })
     }
-
-    const filtered = permits.filter(permit => {
-      if (!permit.StartDate || !permit.EndDate) return false
+    
+    // Sort: รออนุมัติ first, then by UpdatedDate descending
+    const sorted = filtered.sort((a, b) => {
+      const aIsPending = a.Status === 'รออนุมัติ' || a.Status === PERMIT_STATUS.PENDING
+      const bIsPending = b.Status === 'รออนุมัติ' || b.Status === PERMIT_STATUS.PENDING
       
-      const selectedDate = new Date(filterDate)
-      const startDate = new Date(permit.StartDate)
-      const endDate = new Date(permit.EndDate)
+      if (aIsPending && !bIsPending) return -1
+      if (!aIsPending && bIsPending) return 1
       
-      // Check if selected date falls within the work period
-      return selectedDate >= startDate && selectedDate <= endDate
+      // If both have same pending status, sort by UpdatedDate
+      return new Date(b.UpdatedDate).getTime() - new Date(a.UpdatedDate).getTime()
     })
     
-    setFilteredPermits(filtered)
+    setFilteredPermits(sorted)
     setCurrentPage(1) // Reset to first page when filtering
   }, [permits, filterDate])
 
@@ -278,15 +289,27 @@ export default function AdminPermitsPage() {
           
           setAuditRemarks(audit.Remarks || '')
           
+          // Convert UTC to Thailand timezone (GMT+7) and format as "23 มกราคม 2569 เวลา 15:51"
+          const auditDate = new Date(audit.AuditDate)
+          const thailandDate = new Date(auditDate.getTime() + (7 * 60 * 60 * 1000))
+          
+          const dateStr = thailandDate.toLocaleDateString('th-TH', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'Asia/Bangkok'
+          })
+          
+          const timeStr = thailandDate.toLocaleTimeString('th-TH', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'Asia/Bangkok'
+          })
+          
           setAuditInfo({
             auditedByName: audit.AuditedByName,
-            auditDate: new Date(audit.AuditDate).toLocaleString('th-TH', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            }),
+            auditDate: `${dateStr} เวลา ${timeStr}`,
             isExisting: true
           })
         } else {
@@ -586,7 +609,7 @@ export default function AdminPermitsPage() {
                   </div>
                 )}
 
-                {permit.Status === PERMIT_STATUS.PENDING && (
+                {(permit.Status === PERMIT_STATUS.PENDING || permit.Status === 'รออนุมัติ') && (
                   <div className="flex gap-3 pt-4 border-t">
                     <button
                       onClick={() => handleUpdateStatus(permit.PermitId, PERMIT_STATUS.APPROVED)}
@@ -601,22 +624,6 @@ export default function AdminPermitsPage() {
                       className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {updatingId === permit.PermitId ? 'กำลังอัปเดต...' : '✕ ไม่อนุมัติ'}
-                    </button>
-                  </div>
-                )}
-
-                {/* Audit Button for Approved Permits */}
-                {permit.Status === PERMIT_STATUS.APPROVED && (
-                  <div className="flex gap-3 pt-4 border-t">
-                    <button
-                      onClick={() => handleOpenAudit(permit.PermitId)}
-                      className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${
-                        auditStatuses[permit.PermitId]
-                          ? 'bg-green-600 hover:bg-green-700'
-                          : 'bg-yellow-600 hover:bg-yellow-700'
-                      }`}
-                    >
-                      {auditStatuses[permit.PermitId] ? '✓ ตรวจสอบแล้ว' : '⏳ รอตรวจสอบ'}
                     </button>
                   </div>
                 )}

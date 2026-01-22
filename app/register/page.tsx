@@ -209,15 +209,8 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <div>
-              <label className="label">สังกัด/แผนก</label>
-              <input
-                type="text"
-                className="input"
-                placeholder="ระบุสังกัดหรือแผนก (ถ้ามี)"
-                {...register('department')}
-              />
-            </div>
+            {/* Department - Hidden */}
+            <input type="hidden" {...register('department')} />
 
             <div>
               <label className="label">

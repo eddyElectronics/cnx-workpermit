@@ -119,23 +119,35 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-br from-primary-50 to-primary-100">
-      {/* Header with AOT Logo */}
-      <div className="w-full bg-white shadow-sm py-4 px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-center">
-          <Image
-            src="https://upload.wikimedia.org/wikipedia/commons/3/32/Airports_of_Thailand_Logo.svg"
-            alt="Airports of Thailand"
-            width={200}
-            height={60}
-            className="h-12 w-auto"
-            priority
-          />
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(https://apis.airportthai.co.th/microsite/images/banners/banner_7_202411141014138.png)',
+        }}
+      />
+      {/* Overlay for better readability */}
+      <div className="absolute inset-0 bg-black/40" />
+      
+      {/* Content */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Header with AOT Logo */}
+        <div className="w-full bg-white shadow-sm py-4 px-6">
+          <div className="max-w-6xl mx-auto flex items-center justify-center">
+            <Image
+              src="https://upload.wikimedia.org/wikipedia/commons/3/32/Airports_of_Thailand_Logo.svg"
+              alt="Airports of Thailand"
+              width={200}
+              height={60}
+              className="h-12 w-auto"
+              priority
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        {/* Main Content */}
+        <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="max-w-md w-full">
           <div className="card text-center">
             {/* App Logo/Icon */}
@@ -199,7 +211,7 @@ export default function Home() {
           </p>
         </div>
       </div>
-    </div>
+      </div>
     </div>
   )
 }

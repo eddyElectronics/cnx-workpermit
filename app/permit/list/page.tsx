@@ -217,25 +217,6 @@ export default function PermitListPage() {
         )}
 
         {error && (
-                  src={liffProfile.pictureUrl}
-                  alt={user.FullName}
-                  width={64}
-                  height={64}
-                  className="rounded-full"
-                />
-              )}
-              <div>
-                <p className="text-lg font-medium text-gray-900">
-                  {user.FullName}
-                </p>
-                <p className="text-sm text-gray-600">{user.CompanyName}</p>
-                <p className="text-sm text-gray-500">{user.PhoneNumber}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
           </div>

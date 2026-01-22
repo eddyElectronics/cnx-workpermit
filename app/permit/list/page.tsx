@@ -11,10 +11,13 @@ import { liffService } from '@/lib/liff'
 
 export default function PermitListPage() {
   const router = useRouter()
-  const { user, liffProfile, clearUser } = useUserStore()
+  const { user, liffProfile, setUser, clearUser } = useUserStore()
   const [permits, setPermits] = useState<WorkPermit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState(false)
+  const [newFullName, setNewFullName] = useState('')
+  const [savingName, setSavingName] = useState(false)
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -26,6 +29,38 @@ export default function PermitListPage() {
       } catch (err) {
         console.error('Logout error:', err)
       }
+    }
+  }
+
+  const handleSaveFullName = async () => {
+    if (!newFullName.trim() || !user) return
+    
+    setSavingName(true)
+    try {
+      const response = await fetch('/api/user/update-name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.UserId,
+          fullName: newFullName.trim()
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update name')
+      }
+
+      const result = await response.json()
+      
+      // Update local user state
+      setUser({ ...user, FullName: newFullName.trim() })
+      setEditingName(false)
+      alert('อัปเดตชื่อเรียบร้อยแล้ว')
+    } catch (err) {
+      console.error('Failed to update name:', err)
+      alert('ไม่สามารถอัปเดตชื่อได้ กรุณาลองใหม่อีกครั้ง')
+    } finally {
+      setSavingName(false)
     }
   }
 
@@ -83,23 +118,68 @@ export default function PermitListPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-primary-50 to-primary-100 p-4">
       <div className="max-w-4xl mx-auto py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            รายการคำขอของฉัน
-          </h1>
-          <div className="flex gap-2">
-            {user?.IsAdmin && (
-              <button
-                onClick={() => router.push('/admin/permits')}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-              >
-                👑 อนุมัติคำขอ
-              </button>
-            )}
-            <button
-              onClick={() => router.push('/permit/create')}
-              className="btn-primary px-4 py-2 text-sm"
+        {/* Header */}justify-between">
+              <div className="flex items-center gap-3">
+                {liffProfile?.pictureUrl && (
+                  <Image
+                    src={liffProfile.pictureUrl}
+                    alt={user.FullName}
+                    width={64}
+                    height={64}
+                    className="rounded-full"
+                  />
+                )}
+                <div>
+                  {editingName ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newFullName}
+                        onChange={(e) => setNewFullName(e.target.value)}
+                        placeholder="ชื่อ-นามสกุล"
+                        className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleSaveFullName}
+                        disabled={savingName || !newFullName.trim()}
+                        className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 text-sm"
+                      >
+                        {savingName ? 'กำลังบันทึก...' : '✓'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingName(false)
+                          setNewFullName('')
+                        }}
+                        className="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-lg font-medium text-gray-900">
+                      {user.FullName}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600">{user.CompanyName}</p>
+                  <p className="text-sm text-gray-500">{user.PhoneNumber}</p>
+                </div>
+              </div>
+              {!editingName && (
+                <button
+                  onClick={() => {
+                    setNewFullName(user.FullName)
+                    setEditingName(true)
+                  }}
+                  className="px-3 py-2 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  แก้ไขชื่อ
+                </button>
+              )}ame="btn-primary px-4 py-2 text-sm"
             >
               + สร้างคำขอใหม่
             </button>

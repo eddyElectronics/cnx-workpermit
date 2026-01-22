@@ -253,6 +253,9 @@ export const apiService = {
     Email?: string
   }) => {
     try {
+      console.log('=== registerUser called ===')
+      console.log('Input data:', JSON.stringify(data, null, 2))
+      
       const result = await executeProcedure('usp_RegisterUser', {
         LineUserId: data.LineUserId,
         CompanyName: data.CompanyName,
@@ -262,23 +265,50 @@ export const apiService = {
         Email: data.Email || null,
       })
       
-      console.log('Register user result:', result)
+      console.log('=== registerUser result ===')
+      console.log('Result type:', typeof result)
+      console.log('Result:', JSON.stringify(result, null, 2))
       
       // Handle different response structures
+      if (!result) {
+        console.warn('Result is null or undefined, returning empty data')
+        return { data: [] }
+      }
+      
       if (Array.isArray(result)) {
+        console.log('Result is array, wrapping in data property')
         return { data: result }
-      } else if (result && typeof result === 'object') {
+      }
+      
+      if (typeof result === 'object') {
         // If it's already an object with data property
         if ('data' in result) {
+          console.log('Result already has data property')
           return result
         }
+        // If it's a recordset structure
+        if ('recordset' in result) {
+          console.log('Result has recordset property')
+          return { data: (result as any).recordset }
+        }
         // If it's a single record, wrap it
+        console.log('Result is object, wrapping as single record')
         return { data: [result] }
       }
       
+      console.warn('Unexpected result type, returning empty data')
       return { data: [] }
     } catch (error) {
-      console.error('Registration API error:', error)
+      console.error('=== registerUser error ===')
+      console.error('Error type:', typeof error)
+      console.error('Error:', error)
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as any
+        console.error('Axios error response:', axiosError.response?.data)
+        console.error('Axios error status:', axiosError.response?.status)
+      }
+      
       throw error
     }
   },

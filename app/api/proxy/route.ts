@@ -4,13 +4,12 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    console.log('Proxy request:', {
-      database: body.database,
-      hasQuery: !!body.query,
-      hasProcedure: !!body.procedure,
-      procedure: body.procedure,
-      parameters: body.parameters,
-    })
+    console.log('=== Proxy Request ===')
+    console.log('Database:', body.database)
+    console.log('Has Query:', !!body.query)
+    console.log('Has Procedure:', !!body.procedure)
+    console.log('Procedure:', body.procedure)
+    console.log('Parameters:', JSON.stringify(body.parameters, null, 2))
 
     // Validate request body
     if (!body.database) {
@@ -30,13 +29,17 @@ export async function POST(request: Request) {
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.airportthai.co.th/proxy/api'
     const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
     
+    console.log('API URL:', apiUrl)
+    console.log('Has API Key:', !!apiKey)
+    
     // Determine endpoint
     const endpoint = body.procedure ? '/procedure' : '/query'
+    const fullUrl = `${apiUrl}${endpoint}`
     
-    console.log('Calling API:', `${apiUrl}${endpoint}`)
+    console.log('Calling API:', fullUrl)
     console.log('Request body:', JSON.stringify(body, null, 2))
     
-    const response = await fetch(`${apiUrl}${endpoint}`, {
+    const response = await fetch(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,6 +47,11 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify(body),
     })
+
+    console.log('=== API Response ===')
+    console.log('Status:', response.status)
+    console.log('Status Text:', response.statusText)
+    console.log('OK:', response.ok)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -91,7 +99,12 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json()
-    console.log('API Success:', { hasData: !!data, dataKeys: Object.keys(data) })
+    console.log('=== API Success ===')
+    console.log('Response data type:', typeof data)
+    console.log('Has data:', !!data)
+    console.log('Data keys:', data && typeof data === 'object' ? Object.keys(data) : 'N/A')
+    console.log('Data:', JSON.stringify(data, null, 2))
+    
     return NextResponse.json(data)
     
   } catch (error: unknown) {

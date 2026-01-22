@@ -54,6 +54,11 @@ export default function AdminPermitsPage() {
     worker: false,
   })
   const [auditRemarks, setAuditRemarks] = useState('')
+  const [auditInfo, setAuditInfo] = useState<{
+    auditedByName: string
+    auditDate: string
+    isExisting: boolean
+  } | null>(null)
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -206,36 +211,123 @@ export default function AdminPermitsPage() {
     }
   }
 
-  const handleOpenAudit = (permitId: number) => {
+  const handleOpenAudit = async (permitId: number) => {
     setAuditPermitId(permitId)
-    // Reset audit form
-    setAuditChecks({
-      helmet: false,
-      earPlugs: false,
-      glasses: false,
-      mask: false,
-      chemicalSuit: false,
-      gloves: false,
-      safetyShoes: false,
-      belt: false,
-      safetyRope: false,
-      reflectiveVest: false,
-      areaBarrier: false,
-      equipmentStrength: false,
-      standardInstallation: false,
-      toolReadiness: false,
-      fireExtinguisher: false,
-      electricalCutoff: false,
-      alarmSystemOff: false,
-      undergroundCheck: false,
-      chemicalCheck: false,
-      pressureCheck: false,
-      authorizer: false,
-      assistant: false,
-      supervisor: false,
-      worker: false,
-    })
-    setAuditRemarks('')
+    setAuditInfo(null)
+    
+    // Try to fetch existing audit data
+    try {
+      const response = await fetch(`/api/audit?permitId=${permitId}`)
+      
+      if (response.ok) {
+        const result = await response.json()
+        
+        if (result.success && result.data && result.data.length > 0) {
+          // Load the most recent audit (first item)
+          const audit = result.data[0]
+          
+          setAuditChecks({
+            helmet: audit.Helmet === 1 || audit.Helmet === true,
+            earPlugs: audit.EarPlugs === 1 || audit.EarPlugs === true,
+            glasses: audit.Glasses === 1 || audit.Glasses === true,
+            mask: audit.Mask === 1 || audit.Mask === true,
+            chemicalSuit: audit.ChemicalSuit === 1 || audit.ChemicalSuit === true,
+            gloves: audit.Gloves === 1 || audit.Gloves === true,
+            safetyShoes: audit.SafetyShoes === 1 || audit.SafetyShoes === true,
+            belt: audit.Belt === 1 || audit.Belt === true,
+            safetyRope: audit.SafetyRope === 1 || audit.SafetyRope === true,
+            reflectiveVest: audit.ReflectiveVest === 1 || audit.ReflectiveVest === true,
+            areaBarrier: audit.AreaBarrier === 1 || audit.AreaBarrier === true,
+            equipmentStrength: audit.EquipmentStrength === 1 || audit.EquipmentStrength === true,
+            standardInstallation: audit.StandardInstallation === 1 || audit.StandardInstallation === true,
+            toolReadiness: audit.ToolReadiness === 1 || audit.ToolReadiness === true,
+            fireExtinguisher: audit.FireExtinguisher === 1 || audit.FireExtinguisher === true,
+            electricalCutoff: audit.ElectricalCutoff === 1 || audit.ElectricalCutoff === true,
+            alarmSystemOff: audit.AlarmSystemOff === 1 || audit.AlarmSystemOff === true,
+            undergroundCheck: audit.UndergroundCheck === 1 || audit.UndergroundCheck === true,
+            chemicalCheck: audit.ChemicalCheck === 1 || audit.ChemicalCheck === true,
+            pressureCheck: audit.PressureCheck === 1 || audit.PressureCheck === true,
+            authorizer: audit.Authorizer === 1 || audit.Authorizer === true,
+            assistant: audit.Assistant === 1 || audit.Assistant === true,
+            supervisor: audit.Supervisor === 1 || audit.Supervisor === true,
+            worker: audit.Worker === 1 || audit.Worker === true,
+          })
+          
+          setAuditRemarks(audit.Remarks || '')
+          
+          setAuditInfo({
+            auditedByName: audit.AuditedByName,
+            auditDate: new Date(audit.AuditDate).toLocaleString('th-TH', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            isExisting: true
+          })
+        } else {
+          // No existing audit, reset to empty
+          setAuditChecks({
+            helmet: false,
+            earPlugs: false,
+            glasses: false,
+            mask: false,
+            chemicalSuit: false,
+            gloves: false,
+            safetyShoes: false,
+            belt: false,
+            safetyRope: false,
+            reflectiveVest: false,
+            areaBarrier: false,
+            equipmentStrength: false,
+            standardInstallation: false,
+            toolReadiness: false,
+            fireExtinguisher: false,
+            electricalCutoff: false,
+            alarmSystemOff: false,
+            undergroundCheck: false,
+            chemicalCheck: false,
+            pressureCheck: false,
+            authorizer: false,
+            assistant: false,
+            supervisor: false,
+            worker: false,
+          })
+          setAuditRemarks('')
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch audit data:', error)
+      // Reset to empty on error
+      setAuditChecks({
+        helmet: false,
+        earPlugs: false,
+        glasses: false,
+        mask: false,
+        chemicalSuit: false,
+        gloves: false,
+        safetyShoes: false,
+        belt: false,
+        safetyRope: false,
+        reflectiveVest: false,
+        areaBarrier: false,
+        equipmentStrength: false,
+        standardInstallation: false,
+        toolReadiness: false,
+        fireExtinguisher: false,
+        electricalCutoff: false,
+        alarmSystemOff: false,
+        undergroundCheck: false,
+        chemicalCheck: false,
+        pressureCheck: false,
+        authorizer: false,
+        assistant: false,
+        supervisor: false,
+        worker: false,
+      })
+      setAuditRemarks('')
+    }
   }
 
   const handleSaveAudit = async () => {
@@ -645,6 +737,17 @@ export default function AdminPermitsPage() {
                   ×
                 </button>
               </div>
+              
+              {/* Audit Info Banner */}
+              {auditInfo && (
+                <div className="bg-blue-50 border-b border-blue-200 px-6 py-3">
+                  <p className="text-sm text-blue-900">
+                    <span className="font-semibold">บันทึกครั้งล่าสุด:</span> {auditInfo.auditedByName} 
+                    <span className="mx-2">•</span>
+                    <span>{auditInfo.auditDate}</span>
+                  </p>
+                </div>
+              )}
               
               <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                 <div className="space-y-6">

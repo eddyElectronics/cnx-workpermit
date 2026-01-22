@@ -944,27 +944,76 @@ BEGIN
             RETURN;
         END
         
-        -- Insert audit record
-        INSERT INTO [dbo].[WorkPermitAudits] (
-            [PermitId], [AuditedBy],
-            [Helmet], [EarPlugs], [Glasses], [Mask], [ChemicalSuit],
-            [Gloves], [SafetyShoes], [Belt], [SafetyRope], [ReflectiveVest],
-            [AreaBarrier], [EquipmentStrength], [StandardInstallation], [ToolReadiness], [FireExtinguisher],
-            [ElectricalCutoff], [AlarmSystemOff], [UndergroundCheck], [ChemicalCheck], [PressureCheck],
-            [Authorizer], [Assistant], [Supervisor], [Worker],
-            [Remarks]
-        )
-        VALUES (
-            @PermitId, @AuditedBy,
-            @Helmet, @EarPlugs, @Glasses, @Mask, @ChemicalSuit,
-            @Gloves, @SafetyShoes, @Belt, @SafetyRope, @ReflectiveVest,
-            @AreaBarrier, @EquipmentStrength, @StandardInstallation, @ToolReadiness, @FireExtinguisher,
-            @ElectricalCutoff, @AlarmSystemOff, @UndergroundCheck, @ChemicalCheck, @PressureCheck,
-            @Authorizer, @Assistant, @Supervisor, @Worker,
-            @Remarks
-        );
+        DECLARE @ExistingAuditId INT;
+        DECLARE @AuditId INT;
         
-        SELECT SCOPE_IDENTITY() AS [AuditId];
+        -- Check if audit record already exists for this permit
+        SELECT @ExistingAuditId = [AuditId] 
+        FROM [dbo].[WorkPermitAudits] 
+        WHERE [PermitId] = @PermitId;
+        
+        IF @ExistingAuditId IS NOT NULL
+        BEGIN
+            -- Update existing audit record
+            UPDATE [dbo].[WorkPermitAudits]
+            SET 
+                [AuditedBy] = @AuditedBy,
+                [Helmet] = @Helmet,
+                [EarPlugs] = @EarPlugs,
+                [Glasses] = @Glasses,
+                [Mask] = @Mask,
+                [ChemicalSuit] = @ChemicalSuit,
+                [Gloves] = @Gloves,
+                [SafetyShoes] = @SafetyShoes,
+                [Belt] = @Belt,
+                [SafetyRope] = @SafetyRope,
+                [ReflectiveVest] = @ReflectiveVest,
+                [AreaBarrier] = @AreaBarrier,
+                [EquipmentStrength] = @EquipmentStrength,
+                [StandardInstallation] = @StandardInstallation,
+                [ToolReadiness] = @ToolReadiness,
+                [FireExtinguisher] = @FireExtinguisher,
+                [ElectricalCutoff] = @ElectricalCutoff,
+                [AlarmSystemOff] = @AlarmSystemOff,
+                [UndergroundCheck] = @UndergroundCheck,
+                [ChemicalCheck] = @ChemicalCheck,
+                [PressureCheck] = @PressureCheck,
+                [Authorizer] = @Authorizer,
+                [Assistant] = @Assistant,
+                [Supervisor] = @Supervisor,
+                [Worker] = @Worker,
+                [Remarks] = @Remarks,
+                [AuditDate] = GETDATE()
+            WHERE [AuditId] = @ExistingAuditId;
+            
+            SET @AuditId = @ExistingAuditId;
+        END
+        ELSE
+        BEGIN
+            -- Insert new audit record
+            INSERT INTO [dbo].[WorkPermitAudits] (
+                [PermitId], [AuditedBy],
+                [Helmet], [EarPlugs], [Glasses], [Mask], [ChemicalSuit],
+                [Gloves], [SafetyShoes], [Belt], [SafetyRope], [ReflectiveVest],
+                [AreaBarrier], [EquipmentStrength], [StandardInstallation], [ToolReadiness], [FireExtinguisher],
+                [ElectricalCutoff], [AlarmSystemOff], [UndergroundCheck], [ChemicalCheck], [PressureCheck],
+                [Authorizer], [Assistant], [Supervisor], [Worker],
+                [Remarks]
+            )
+            VALUES (
+                @PermitId, @AuditedBy,
+                @Helmet, @EarPlugs, @Glasses, @Mask, @ChemicalSuit,
+                @Gloves, @SafetyShoes, @Belt, @SafetyRope, @ReflectiveVest,
+                @AreaBarrier, @EquipmentStrength, @StandardInstallation, @ToolReadiness, @FireExtinguisher,
+                @ElectricalCutoff, @AlarmSystemOff, @UndergroundCheck, @ChemicalCheck, @PressureCheck,
+                @Authorizer, @Assistant, @Supervisor, @Worker,
+                @Remarks
+            );
+            
+            SET @AuditId = SCOPE_IDENTITY();
+        END
+        
+        SELECT @AuditId AS [AuditId];
     END TRY
     BEGIN CATCH
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();

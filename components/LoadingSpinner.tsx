@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export default function LoadingSpinner({ 
   message = 'กำลังโหลด...', 
   children 
@@ -8,14 +10,17 @@ export default function LoadingSpinner({
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
       <div className="text-center">
-        <div className="relative w-16 h-16 mx-auto mb-4">
-          {/* Outer spinning circle */}
-          <div className="absolute inset-0 border-4 border-primary-200 rounded-full"></div>
-          {/* Inner spinning arc */}
-          <div className="absolute inset-0 border-4 border-transparent border-t-primary-600 rounded-full animate-spin"></div>
-          {/* Center dot */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-3 h-3 bg-primary-600 rounded-full animate-pulse"></div>
+        <div className="relative w-24 h-24 mx-auto mb-4">
+          {/* Airplane image with rotation animation */}
+          <div className="animate-spin">
+            <Image
+              src="/images/airplane.png"
+              alt="Loading"
+              width={96}
+              height={96}
+              className="w-24 h-24 object-contain"
+              priority
+            />
           </div>
         </div>
         <p className="text-gray-600 font-medium">{message}</p>

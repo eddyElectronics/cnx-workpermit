@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Call stored procedure to create audit
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query`, {
+    // Call stored procedure to create audit via proxy
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/proxy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -109,8 +109,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Call stored procedure to get audits
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query`, {
+    // Call stored procedure to get audits via proxy
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/proxy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

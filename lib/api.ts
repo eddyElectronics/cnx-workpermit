@@ -252,14 +252,35 @@ export const apiService = {
     PhoneNumber: string
     Email?: string
   }) => {
-    return executeProcedure('usp_RegisterUser', {
-      LineUserId: data.LineUserId,
-      CompanyName: data.CompanyName,
-      Department: data.Department || null,
-      FullName: data.FullName,
-      PhoneNumber: data.PhoneNumber,
-      Email: data.Email || null,
-    })
+    try {
+      const result = await executeProcedure('usp_RegisterUser', {
+        LineUserId: data.LineUserId,
+        CompanyName: data.CompanyName,
+        Department: data.Department || null,
+        FullName: data.FullName,
+        PhoneNumber: data.PhoneNumber,
+        Email: data.Email || null,
+      })
+      
+      console.log('Register user result:', result)
+      
+      // Handle different response structures
+      if (Array.isArray(result)) {
+        return { data: result }
+      } else if (result && typeof result === 'object') {
+        // If it's already an object with data property
+        if ('data' in result) {
+          return result
+        }
+        // If it's a single record, wrap it
+        return { data: [result] }
+      }
+      
+      return { data: [] }
+    } catch (error) {
+      console.error('Registration API error:', error)
+      throw error
+    }
   },
 
   // Get Active Areas

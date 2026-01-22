@@ -42,7 +42,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Call stored procedure to create audit via proxy
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/proxy`, {
+    const apiUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/proxy`
+    console.log('Calling audit API:', apiUrl)
+    console.log('Audit parameters:', { permitId, auditedBy })
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -81,15 +85,26 @@ export async function POST(request: NextRequest) {
       })
     })
 
+    console.log('Response status:', response.status)
+    
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || 'Failed to create audit')
+      const errorText = await response.text()
+      console.error('API Error response:', errorText)
+      let errorData
+      try {
+        errorData = JSON.parse(errorText)
+      } catch {
+        errorData = { error: errorText }
+      }
+      throw new Error(errorData.error || `API Error: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('Audit created successfully:', data)
     return NextResponse.json({ success: true, data })
   } catch (error: any) {
     console.error('Audit creation error:', error)
+    console.error('Error stack:', error.stack)
     return NextResponse.json(
       { error: error.message || 'Failed to create audit' },
       { status: 500 }

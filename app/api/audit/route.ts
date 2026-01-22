@@ -43,14 +43,15 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating audit for permit:', permitId, 'by user:', auditedBy)
 
-    // Call our internal proxy API (use http to avoid SSL issues)
-    const proxyUrl = 'http://localhost:3000/api/proxy'
-    console.log('Calling internal proxy API')
+    // Call external API directly with proper headers
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://api.airportthai.co.th/proxy/api'}/query`
+    const apiKey = process.env.AOT_API_KEY || ''
     
-    const response = await fetch(proxyUrl, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': apiKey,
       },
       body: JSON.stringify({
         database: 'CNXWorkPermit',
@@ -89,13 +90,13 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Proxy API error:', errorText)
+      console.error('API error:', errorText)
       throw new Error(`Failed to create audit: ${errorText}`)
     }
 
     const data = await response.json()
     console.log('Audit created successfully')
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: data.data })
   } catch (error: any) {
     console.error('Audit creation error:', error.message)
     console.error('Error details:', error)
@@ -120,13 +121,15 @@ export async function GET(request: NextRequest) {
 
     console.log('Getting audits for permit:', permitId)
 
-    // Call our internal proxy API (use http to avoid SSL issues)
-    const proxyUrl = 'http://localhost:3000/api/proxy'
+    // Call external API directly with proper headers
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://api.airportthai.co.th/proxy/api'}/query`
+    const apiKey = process.env.AOT_API_KEY || ''
     
-    const response = await fetch(proxyUrl, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': apiKey,
       },
       body: JSON.stringify({
         database: 'CNXWorkPermit',
@@ -139,13 +142,13 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Proxy API error:', errorText)
+      console.error('API error:', errorText)
       throw new Error(`Failed to get audits: ${errorText}`)
     }
 
     const data = await response.json()
     console.log('Audits retrieved successfully')
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: data.data })
   } catch (error: any) {
     console.error('Get audits error:', error.message)
     console.error('Error details:', error)

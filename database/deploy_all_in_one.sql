@@ -516,6 +516,7 @@ BEGIN
     DECLARE @Year NVARCHAR(4) = CAST(YEAR(GETDATE()) AS NVARCHAR(4));
     DECLARE @Month NVARCHAR(2) = RIGHT('0' + CAST(MONTH(GETDATE()) AS NVARCHAR(2)), 2);
     DECLARE @Day NVARCHAR(2) = RIGHT('0' + CAST(DAY(GETDATE()) AS NVARCHAR(2)), 2);
+    DECLARE @DateStr NVARCHAR(8) = @Year + @Month + @Day;
     DECLARE @Sequence INT;
     DECLARE @SequenceStr NVARCHAR(2);
     DECLARE @MaxRetries INT = 10;
@@ -528,15 +529,17 @@ BEGIN
             BEGIN TRANSACTION;
             
             -- Get the next sequence number by finding the MAX sequence for today
+            -- Format: YYYYMMDD-{Running number 2 digit}
             SELECT @Sequence = ISNULL(MAX(CAST(RIGHT([PermitNumber], 2) AS INT)), 0) + 1
             FROM [dbo].[WorkPermits] WITH (TABLOCKX, HOLDLOCK)
-            WHERE [PermitNumber] LIKE 'CNX-P' + @Year + @Month + @Day + '-%';
+            WHERE [PermitNumber] LIKE @DateStr + '-%';
             
             -- Format sequence as 2-digit string
             SET @SequenceStr = RIGHT('00' + CAST(@Sequence AS NVARCHAR(2)), 2);
             
-            -- Format: CNX-P{YYYYMMDD}-{Running number 2 digit}
-            SET @PermitNumber = 'CNX-P' + @Year + @Month + @Day + '-' + @SequenceStr;
+            -- Format: YYYYMMDD-{Running number 2 digit}
+            -- Example: 20260122-01, 20260122-02
+            SET @PermitNumber = @DateStr + '-' + @SequenceStr;
             
             INSERT INTO [dbo].[WorkPermits] ([PermitNumber], [UserId], [OwnerName], [CompanyName],
                 [AreaId], [WorkTypeId], [WorkShift], [StartDate], [EndDate], [Status], [Remarks])

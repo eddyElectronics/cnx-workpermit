@@ -8,6 +8,7 @@ import { th } from 'date-fns/locale'
 import { useUserStore } from '@/lib/store'
 import { apiService, WorkPermit } from '@/lib/api'
 import { liffService } from '@/lib/liff'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function PermitListPage() {
   const router = useRouter()
@@ -118,14 +119,7 @@ const handleCopyLineUserId = async () => {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-primary-50 to-primary-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner message="กำลังโหลดข้อมูล..." />
   }
 
   return (

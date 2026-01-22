@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { liffService } from '@/lib/liff'
 import { useUserStore } from '@/lib/store'
 import { apiService } from '@/lib/api'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function Home() {
   const router = useRouter()
@@ -104,17 +105,13 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-primary-50 to-primary-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">กำลังโหลด...</p>
-          {error && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm max-w-md mx-auto">
-              {error}
-            </div>
-          )}
-        </div>
-      </div>
+      <LoadingSpinner message="กำลังโหลด...">
+        {error && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm max-w-md mx-auto">
+            {error}
+          </div>
+        )}
+      </LoadingSpinner>
     )
   }
 

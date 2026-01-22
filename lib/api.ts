@@ -238,6 +238,7 @@ export interface WorkPermit {
   Status: string
   Remarks?: string
   CreatedDate: string
+  UpdatedDate: string
   DocumentCount?: number
 }
 

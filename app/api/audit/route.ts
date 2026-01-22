@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating audit for permit:', permitId, 'by user:', auditedBy)
 
-    // Forward to proxy endpoint
-    const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://api.airportthai.co.th/proxy/api'}/query`
-    console.log('Calling proxy API:', proxyUrl)
+    // Call our internal proxy API (use http to avoid SSL issues)
+    const proxyUrl = 'http://localhost:3000/api/proxy'
+    console.log('Calling internal proxy API')
     
     const response = await fetch(proxyUrl, {
       method: 'POST',
@@ -120,8 +120,8 @@ export async function GET(request: NextRequest) {
 
     console.log('Getting audits for permit:', permitId)
 
-    // Forward to proxy endpoint
-    const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://api.airportthai.co.th/proxy/api'}/query`
+    // Call our internal proxy API (use http to avoid SSL issues)
+    const proxyUrl = 'http://localhost:3000/api/proxy'
     
     const response = await fetch(proxyUrl, {
       method: 'POST',

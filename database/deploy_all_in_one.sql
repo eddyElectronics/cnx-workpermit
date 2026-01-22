@@ -261,7 +261,58 @@ END
 ELSE
     PRINT '- LineNotifications table already exists'
 GO
-
+-- ===============================================
+-- 9. WorkPermitAudits Table (บันทึกการตรวจสอบความปลอดภัย)
+-- ===============================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WorkPermitAudits')
+BEGIN
+    CREATE TABLE [dbo].[WorkPermitAudits] (
+        [AuditId] INT IDENTITY(1,1) PRIMARY KEY,
+        [PermitId] INT NOT NULL,
+        [AuditedBy] INT NOT NULL,
+        [AuditDate] DATETIME DEFAULT GETDATE(),
+        -- อุปกรณ์ป้องกันส่วนบุคคล (PPE)
+        [Helmet] BIT DEFAULT 0,
+        [EarPlugs] BIT DEFAULT 0,
+        [Glasses] BIT DEFAULT 0,
+        [Mask] BIT DEFAULT 0,
+        [ChemicalSuit] BIT DEFAULT 0,
+        [Gloves] BIT DEFAULT 0,
+        [SafetyShoes] BIT DEFAULT 0,
+        [Belt] BIT DEFAULT 0,
+        [SafetyRope] BIT DEFAULT 0,
+        [ReflectiveVest] BIT DEFAULT 0,
+        -- การจัดการพื้นที่และอุปกรณ์
+        [AreaBarrier] BIT DEFAULT 0,
+        [EquipmentStrength] BIT DEFAULT 0,
+        [StandardInstallation] BIT DEFAULT 0,
+        [ToolReadiness] BIT DEFAULT 0,
+        [FireExtinguisher] BIT DEFAULT 0,
+        -- การเตือนและตรวจสอบ
+        [ElectricalCutoff] BIT DEFAULT 0,
+        [AlarmSystemOff] BIT DEFAULT 0,
+        [UndergroundCheck] BIT DEFAULT 0,
+        [ChemicalCheck] BIT DEFAULT 0,
+        [PressureCheck] BIT DEFAULT 0,
+        -- บุคลากร
+        [Authorizer] BIT DEFAULT 0,
+        [Assistant] BIT DEFAULT 0,
+        [Supervisor] BIT DEFAULT 0,
+        [Worker] BIT DEFAULT 0,
+        -- หมายเหตุ
+        [Remarks] NVARCHAR(1000) NULL,
+        CONSTRAINT FK_WorkPermitAudits_PermitId FOREIGN KEY ([PermitId]) REFERENCES [dbo].[WorkPermits]([PermitId]) ON DELETE CASCADE,
+        CONSTRAINT FK_WorkPermitAudits_AuditedBy FOREIGN KEY ([AuditedBy]) REFERENCES [dbo].[Users]([UserId])
+    )
+    
+    CREATE INDEX IX_WorkPermitAudits_PermitId ON [dbo].[WorkPermitAudits]([PermitId])
+    CREATE INDEX IX_WorkPermitAudits_AuditDate ON [dbo].[WorkPermitAudits]([AuditDate])
+    
+    PRINT '✓ WorkPermitAudits table created'
+END
+ELSE
+    PRINT '- WorkPermitAudits table already exists'
+GO
 PRINT 'Step 1 completed: All tables created successfully!'
 PRINT ''
 GO
@@ -844,6 +895,110 @@ BEGIN
 END
 GO
 PRINT '✓ usp_SaveLineNotification created'
+GO
+
+-- ===============================================
+-- usp_CreateWorkPermitAudit - บันทึกการตรวจสอบความปลอดภัย
+-- ===============================================
+IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'usp_CreateWorkPermitAudit')
+    DROP PROCEDURE [dbo].[usp_CreateWorkPermitAudit]
+GO
+
+CREATE PROCEDURE [dbo].[usp_CreateWorkPermitAudit]
+    @PermitId INT,
+    @AuditedBy INT,
+    @Helmet BIT = 0,
+    @EarPlugs BIT = 0,
+    @Glasses BIT = 0,
+    @Mask BIT = 0,
+    @ChemicalSuit BIT = 0,
+    @Gloves BIT = 0,
+    @SafetyShoes BIT = 0,
+    @Belt BIT = 0,
+    @SafetyRope BIT = 0,
+    @ReflectiveVest BIT = 0,
+    @AreaBarrier BIT = 0,
+    @EquipmentStrength BIT = 0,
+    @StandardInstallation BIT = 0,
+    @ToolReadiness BIT = 0,
+    @FireExtinguisher BIT = 0,
+    @ElectricalCutoff BIT = 0,
+    @AlarmSystemOff BIT = 0,
+    @UndergroundCheck BIT = 0,
+    @ChemicalCheck BIT = 0,
+    @PressureCheck BIT = 0,
+    @Authorizer BIT = 0,
+    @Assistant BIT = 0,
+    @Supervisor BIT = 0,
+    @Worker BIT = 0,
+    @Remarks NVARCHAR(1000) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    BEGIN TRY
+        -- Verify permit exists and is approved
+        IF NOT EXISTS (SELECT 1 FROM [dbo].[WorkPermits] WHERE [PermitId] = @PermitId AND [Status] = N'อนุมัติ')
+        BEGIN
+            RAISERROR(N'ไม่พบใบอนุญาตหรือใบอนุญาตยังไม่ได้รับการอนุมัติ', 16, 1);
+            RETURN;
+        END
+        
+        -- Insert audit record
+        INSERT INTO [dbo].[WorkPermitAudits] (
+            [PermitId], [AuditedBy],
+            [Helmet], [EarPlugs], [Glasses], [Mask], [ChemicalSuit],
+            [Gloves], [SafetyShoes], [Belt], [SafetyRope], [ReflectiveVest],
+            [AreaBarrier], [EquipmentStrength], [StandardInstallation], [ToolReadiness], [FireExtinguisher],
+            [ElectricalCutoff], [AlarmSystemOff], [UndergroundCheck], [ChemicalCheck], [PressureCheck],
+            [Authorizer], [Assistant], [Supervisor], [Worker],
+            [Remarks]
+        )
+        VALUES (
+            @PermitId, @AuditedBy,
+            @Helmet, @EarPlugs, @Glasses, @Mask, @ChemicalSuit,
+            @Gloves, @SafetyShoes, @Belt, @SafetyRope, @ReflectiveVest,
+            @AreaBarrier, @EquipmentStrength, @StandardInstallation, @ToolReadiness, @FireExtinguisher,
+            @ElectricalCutoff, @AlarmSystemOff, @UndergroundCheck, @ChemicalCheck, @PressureCheck,
+            @Authorizer, @Assistant, @Supervisor, @Worker,
+            @Remarks
+        );
+        
+        SELECT SCOPE_IDENTITY() AS [AuditId];
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+PRINT '✓ usp_CreateWorkPermitAudit created'
+GO
+
+-- ===============================================
+-- usp_GetWorkPermitAudits - ดึงข้อมูลการตรวจสอบ
+-- ===============================================
+IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'usp_GetWorkPermitAudits')
+    DROP PROCEDURE [dbo].[usp_GetWorkPermitAudits]
+GO
+
+CREATE PROCEDURE [dbo].[usp_GetWorkPermitAudits]
+    @PermitId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT 
+        a.*,
+        u.[FullName] AS [AuditedByName],
+        u.[CompanyName] AS [AuditorCompany]
+    FROM [dbo].[WorkPermitAudits] a
+    INNER JOIN [dbo].[Users] u ON a.[AuditedBy] = u.[UserId]
+    WHERE a.[PermitId] = @PermitId
+    ORDER BY a.[AuditDate] DESC;
+END
+GO
+PRINT '✓ usp_GetWorkPermitAudits created'
 GO
 
 PRINT 'Step 3 completed: All stored procedures created successfully!'

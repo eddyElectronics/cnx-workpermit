@@ -23,6 +23,37 @@ export default function AdminPermitsPage() {
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0])
+  
+  // Audit states
+  const [auditPermitId, setAuditPermitId] = useState<number | null>(null)
+  const [savingAudit, setSavingAudit] = useState(false)
+  const [auditChecks, setAuditChecks] = useState({
+    helmet: false,
+    earPlugs: false,
+    glasses: false,
+    mask: false,
+    chemicalSuit: false,
+    gloves: false,
+    safetyShoes: false,
+    belt: false,
+    safetyRope: false,
+    reflectiveVest: false,
+    areaBarrier: false,
+    equipmentStrength: false,
+    standardInstallation: false,
+    toolReadiness: false,
+    fireExtinguisher: false,
+    electricalCutoff: false,
+    alarmSystemOff: false,
+    undergroundCheck: false,
+    chemicalCheck: false,
+    pressureCheck: false,
+    authorizer: false,
+    assistant: false,
+    supervisor: false,
+    worker: false,
+  })
+  const [auditRemarks, setAuditRemarks] = useState('')
 
   const handleLogout = async () => {
     if (confirm('ต้องการออกจากระบบหรือไม่?')) {
@@ -172,6 +203,70 @@ export default function AdminPermitsPage() {
       console.error('Failed to update status:', err)
       setUpdatingId(null)
       alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ')
+    }
+  }
+
+  const handleOpenAudit = (permitId: number) => {
+    setAuditPermitId(permitId)
+    // Reset audit form
+    setAuditChecks({
+      helmet: false,
+      earPlugs: false,
+      glasses: false,
+      mask: false,
+      chemicalSuit: false,
+      gloves: false,
+      safetyShoes: false,
+      belt: false,
+      safetyRope: false,
+      reflectiveVest: false,
+      areaBarrier: false,
+      equipmentStrength: false,
+      standardInstallation: false,
+      toolReadiness: false,
+      fireExtinguisher: false,
+      electricalCutoff: false,
+      alarmSystemOff: false,
+      undergroundCheck: false,
+      chemicalCheck: false,
+      pressureCheck: false,
+      authorizer: false,
+      assistant: false,
+      supervisor: false,
+      worker: false,
+    })
+    setAuditRemarks('')
+  }
+
+  const handleSaveAudit = async () => {
+    if (!auditPermitId || !user) return
+
+    setSavingAudit(true)
+    try {
+      const response = await fetch('/api/audit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          permitId: auditPermitId,
+          auditedBy: user.UserId,
+          ...auditChecks,
+          remarks: auditRemarks || null
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save audit')
+      }
+
+      alert('บันทึกการตรวจสอบเรียบร้อยแล้ว')
+      setAuditPermitId(null)
+    } catch (error) {
+      console.error('Failed to save audit:', error)
+      alert('เกิดข้อผิดพลาดในการบันทึก')
+    } finally {
+      setSavingAudit(false)
     }
   }
 
@@ -385,6 +480,18 @@ export default function AdminPermitsPage() {
                     </button>
                   </div>
                 )}
+
+                {/* Audit Button for Approved Permits */}
+                {permit.Status === PERMIT_STATUS.APPROVED && (
+                  <div className="flex gap-3 pt-4 border-t">
+                    <button
+                      onClick={() => handleOpenAudit(permit.PermitId)}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      🔍 ตรวจสอบ
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -511,6 +618,156 @@ export default function AdminPermitsPage() {
                 alt="Preview"
                 className="max-w-full max-h-[90vh] object-contain"
               />
+            </div>
+          </div>
+        )}
+
+        {/* Audit Modal */}
+        {auditPermitId && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto" onClick={() => setAuditPermitId(null)}>
+            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 border-b flex justify-between items-center bg-blue-600 text-white">
+                <h3 className="text-lg font-semibold">ตรวจสอบความปลอดภัย</h3>
+                <button
+                  onClick={() => setAuditPermitId(null)}
+                  className="text-white hover:text-gray-200 text-2xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div className="space-y-6">
+                  {/* อุปกรณ์ป้องกันส่วนบุคคล (PPE) */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3 text-lg">อุปกรณ์ป้องกันส่วนบุคคล (PPE)</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {[
+                        { key: 'helmet', label: 'หมวก' },
+                        { key: 'earPlugs', label: 'ที่อุดหู' },
+                        { key: 'glasses', label: 'แว่นตา' },
+                        { key: 'mask', label: 'หน้ากาก' },
+                        { key: 'chemicalSuit', label: 'ชุดป้องกันสารเคมี' },
+                        { key: 'gloves', label: 'ถุงมือ' },
+                        { key: 'safetyShoes', label: 'รองเท้า' },
+                        { key: 'belt', label: 'เข็มขัด' },
+                        { key: 'safetyRope', label: 'เชือกนิรภัย' },
+                        { key: 'reflectiveVest', label: 'เสื้อสะท้อนแสง' },
+                      ].map(item => (
+                        <label key={item.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                          <input
+                            type="checkbox"
+                            checked={auditChecks[item.key as keyof typeof auditChecks]}
+                            onChange={(e) => setAuditChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                            className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="text-gray-900">{item.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* การจัดการพื้นที่และอุปกรณ์ */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3 text-lg">การจัดการพื้นที่และอุปกรณ์</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {[
+                        { key: 'areaBarrier', label: 'กั้นพื้นที่' },
+                        { key: 'equipmentStrength', label: 'ความแข็งแรงของอุปกรณ์' },
+                        { key: 'standardInstallation', label: 'การติดตั้งตามมาตรฐาน' },
+                        { key: 'toolReadiness', label: 'ความพร้อมเครื่องมือ' },
+                        { key: 'fireExtinguisher', label: 'อุปกรณ์ดับเพลิง' },
+                      ].map(item => (
+                        <label key={item.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                          <input
+                            type="checkbox"
+                            checked={auditChecks[item.key as keyof typeof auditChecks]}
+                            onChange={(e) => setAuditChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                            className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="text-gray-900">{item.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* การเตือนและตรวจสอบ */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3 text-lg">การเตือนและตรวจสอบ</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {[
+                        { key: 'electricalCutoff', label: 'เตือน ตัดกระแสไฟฟ้า' },
+                        { key: 'alarmSystemOff', label: 'เตือน ปิดระบบแจงเตือน' },
+                        { key: 'undergroundCheck', label: 'ตรวจความพร้อมใต้ดิน' },
+                        { key: 'chemicalCheck', label: 'ตรวจสารเคมี' },
+                        { key: 'pressureCheck', label: 'วัดความดัน' },
+                      ].map(item => (
+                        <label key={item.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                          <input
+                            type="checkbox"
+                            checked={auditChecks[item.key as keyof typeof auditChecks]}
+                            onChange={(e) => setAuditChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                            className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="text-gray-900">{item.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* บุคลากร */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3 text-lg">บุคลากร</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {[
+                        { key: 'authorizer', label: 'ผู้อนุญาต' },
+                        { key: 'assistant', label: 'ผู้ช่วยเหลือ' },
+                        { key: 'supervisor', label: 'ผู้ควบคุม' },
+                        { key: 'worker', label: 'ผู้ปฏิบัติงาน' },
+                      ].map(item => (
+                        <label key={item.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                          <input
+                            type="checkbox"
+                            checked={auditChecks[item.key as keyof typeof auditChecks]}
+                            onChange={(e) => setAuditChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                            className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="text-gray-900">{item.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* หมายเหตุ */}
+                  <div>
+                    <label className="block font-semibold text-gray-900 mb-2">หมายเหตุ</label>
+                    <textarea
+                      value={auditRemarks}
+                      onChange={(e) => setAuditRemarks(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                      placeholder="ระบุข้อมูลเพิ่มเติม (ถ้ามี)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 border-t bg-gray-50 flex gap-3 justify-end">
+                <button
+                  onClick={() => setAuditPermitId(null)}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  disabled={savingAudit}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleSaveAudit}
+                  disabled={savingAudit}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingAudit ? 'กำลังบันทึก...' : 'บันทึก'}
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -158,7 +158,7 @@ export default function AdminPermitsPage() {
             area: permit.AreaName,
             workType: permit.WorkTypeName,
             status: newStatus,
-            approvedBy: user.FirstName + ' ' + user.LastName
+            approvedBy: user.FullName
           }),
         })
         .then(() => console.log('User notification sent successfully'))

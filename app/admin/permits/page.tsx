@@ -243,6 +243,9 @@ export default function AdminPermitsPage() {
 
     setSavingAudit(true)
     try {
+      console.log('Saving audit for permit:', auditPermitId, 'by user:', user.UserId)
+      console.log('Audit checks:', auditChecks)
+      
       const response = await fetch('/api/audit', {
         method: 'POST',
         headers: {
@@ -256,15 +259,22 @@ export default function AdminPermitsPage() {
         })
       })
 
+      console.log('Response status:', response.status)
+      
       if (!response.ok) {
-        throw new Error('Failed to save audit')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('API error response:', errorData)
+        throw new Error(errorData.error || 'Failed to save audit')
       }
 
+      const result = await response.json()
+      console.log('Audit saved successfully:', result)
+      
       alert('บันทึกการตรวจสอบเรียบร้อยแล้ว')
       setAuditPermitId(null)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save audit:', error)
-      alert('เกิดข้อผิดพลาดในการบันทึก')
+      alert(`เกิดข้อผิดพลาดในการบันทึก: ${error.message || 'Unknown error'}`)
     } finally {
       setSavingAudit(false)
     }

@@ -197,6 +197,18 @@ const handleCopyLineUserId = async () => {
                           setEditingName(false)
                           setNewFullName('')
                         }}
+                        className="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-lg font-medium text-gray-900">
+                      {user.FullName}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600">{user.CompanyName}</p>
+                  <p className="text-sm text-gray-500">{user.PhoneNumber}</p>
                   
                   {/* LINE User ID */}
                   <div className="mt-2 flex items-center gap-2">
@@ -226,18 +238,6 @@ const handleCopyLineUserId = async () => {
                       )}
                     </button>
                   </div>
-                        className="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-lg font-medium text-gray-900">
-                      {user.FullName}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-600">{user.CompanyName}</p>
-                  <p className="text-sm text-gray-500">{user.PhoneNumber}</p>
                 </div>
               </div>
               {!editingName && (

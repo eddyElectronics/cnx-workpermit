@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
+import { put } from '@vercel/blob'
 
 export async function POST(request: Request) {
   try {
@@ -16,36 +14,29 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', permitId)
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
-
     const uploadedFiles = []
 
     for (const file of files) {
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-
       // Generate safe filename
       const timestamp = Date.now()
       const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
       const filename = `${timestamp}_${safeName}`
-      const filepath = path.join(uploadsDir, filename)
-
-      // Save file
-      await writeFile(filepath, buffer)
+      
+      // Upload to Vercel Blob
+      // Path format: permits/{permitId}/{filename}
+      const blob = await put(`permits/${permitId}/${filename}`, file, {
+        access: 'public',
+      })
 
       uploadedFiles.push({
         originalName: file.name,
         filename: filename,
-        path: `/uploads/${permitId}/${filename}`,
+        path: blob.url, // Use Vercel Blob URL instead of local path
         size: file.size,
         type: file.type,
       })
 
-      console.log('File uploaded:', filename)
+      console.log('File uploaded to Vercel Blob:', blob.url)
     }
 
     // Save file info to database

@@ -387,8 +387,8 @@ const handleCopyLineUserId = async () => {
                   
                   {/* LINE User ID */}
                   <div className="mt-2 flex items-center gap-2">
-                    <span className="text-xs text-gray-400">LINE ID:</span>
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+                    <span className="text-gray-400" style={{ fontSize: '6px' }}>LINE ID:</span>
+                    <code className="bg-gray-100 px-2 py-1 rounded text-gray-600" style={{ fontSize: '6px' }}>
                       {user.LineUserId}
                     </code>
                     <button

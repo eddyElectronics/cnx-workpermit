@@ -454,13 +454,18 @@ export default function CreatePermitPage() {
                 <label className="label">
                   วันที่เริ่มต้น <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  className="input"
-                  min={minStartDate}
-                  {...register('startDate')}
-                  onChange={handleStartDateChange}
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    className="input pl-10"
+                    min={minStartDate}
+                    {...register('startDate')}
+                    onChange={handleStartDateChange}
+                  />
+                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
                 {errors.startDate && (
                   <p className="error-text">{errors.startDate.message}</p>
                 )}
@@ -470,12 +475,17 @@ export default function CreatePermitPage() {
                 <label className="label">
                   วันที่สิ้นสุด <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  className="input"
-                  min={minEndDate}
-                  {...register('endDate')}
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    className="input pl-10"
+                    min={minEndDate}
+                    {...register('endDate')}
+                  />
+                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
                 {errors.endDate && (
                   <p className="error-text">{errors.endDate.message}</p>
                 )}

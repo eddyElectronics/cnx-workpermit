@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 📍 พื้นที่: ${area || '-'}
 🔧 ประเภทงาน: ${workType || '-'}
 ⏰ ช่วงเวลา: ${workShift || '-'}
-📅 ระยะเวลา: ${formatDate(startDate)} ถึง ${formatDate(endDate)}`
+📅 ระยะเวลา: ${formatDate(startDate)} ถึง ${formatDate(endDate)}
 
 📌 สถานะ: ${statusText}
 ✍️ ผู้อนุมัติ: ${approvedBy || '-'}

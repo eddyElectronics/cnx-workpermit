@@ -11,6 +11,7 @@ import { apiService, Area, WorkType } from '@/lib/api'
 import { WORK_SHIFTS } from '@/lib/config'
 import { liffService } from '@/lib/liff'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { getThailandDateString } from '@/lib/date-utils'
 
 const permitSchema = z.object({
   ownerName: z.string().min(1, 'กรุณาระบุชื่อเจ้าของงาน'),
@@ -22,9 +23,8 @@ const permitSchema = z.object({
   endDate: z.string().min(1, 'กรุณาเลือกวันที่สิ้นสุด'),
   remarks: z.string().optional(),
 }).refine((data) => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const start = new Date(data.startDate)
+  const today = getThailandDateString()
+  const start = data.startDate
   return start >= today
 }, {
   message: 'วันที่เริ่มต้นต้องไม่ย้อนหลัง',
@@ -64,9 +64,8 @@ export default function CreatePermitPage() {
   })
 
   useEffect(() => {
-    // Set minimum date to today
-    const today = new Date()
-    const todayStr = today.toISOString().split('T')[0]
+    // Set minimum date to today (Thailand timezone)
+    const todayStr = getThailandDateString()
     setMinStartDate(todayStr)
     setMinEndDate(todayStr)
   }, [])

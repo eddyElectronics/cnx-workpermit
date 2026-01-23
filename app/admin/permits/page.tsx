@@ -8,6 +8,7 @@ import { apiService, WorkPermit } from '@/lib/api'
 import { PERMIT_STATUS } from '@/lib/config'
 import { liffService } from '@/lib/liff'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { getThailandDateString } from '@/lib/date-utils'
 
 export default function AdminPermitsPage() {
   const router = useRouter()
@@ -23,7 +24,7 @@ export default function AdminPermitsPage() {
   const [documents, setDocuments] = useState<any[]>([])
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0])
+  const [filterDate, setFilterDate] = useState<string>(getThailandDateString())
   
   // Audit states
   const [auditPermitId, setAuditPermitId] = useState<number | null>(null)

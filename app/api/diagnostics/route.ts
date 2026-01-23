@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server'
 import { API_CONFIG } from '@/lib/config'
 
 export async function GET() {
+  // Get Thailand time (UTC+7)
+  const now = new Date()
+  const thailandTime = new Date(now.getTime() + (7 * 60 * 60 * 1000))
+  
   const diagnostics = {
-    timestamp: new Date().toISOString(),
+    timestamp: thailandTime.toISOString(),
     environment: process.env.NODE_ENV,
     config: {
       apiBaseUrl: API_CONFIG.baseURL,

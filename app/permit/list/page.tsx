@@ -184,7 +184,7 @@ const handleCopyLineUserId = async () => {
           auditedBy: user.UserId,
           auditedByName: user.FullName,
           remarks: auditRemarks,
-          auditDate: new Date().toISOString(),
+          auditDate: getThailandISOString(),
           ...auditChecks
         })
       })

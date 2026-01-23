@@ -240,6 +240,9 @@ export default function AdminPermitsPage() {
             companyName: permit.CompanyName,
             area: permit.AreaName,
             workType: permit.WorkTypeName,
+            workShift: permit.WorkShift,
+            startDate: permit.StartDate,
+            endDate: permit.EndDate,
             status: newStatus,
             approvedBy: user.FullName
           }),

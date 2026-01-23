@@ -338,8 +338,8 @@ const handleCopyLineUserId = async () => {
         {/* User Info */}
         {user && (
           <div className="card mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center gap-2">
                 {liffProfile?.pictureUrl && (
                   <Image
                     src={liffProfile.pictureUrl}
@@ -349,6 +349,22 @@ const handleCopyLineUserId = async () => {
                     className="rounded-full"
                   />
                 )}
+                {!editingName && (
+                  <button
+                    onClick={() => {
+                      setNewFullName(user.FullName)
+                      setEditingName(true)
+                    }}
+                    className="px-2 py-1 text-xs text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    แก้ไข
+                  </button>
+                )}
+              </div>
+              <div className="flex-1">
                 <div>
                   {editingName ? (
                     <div className="flex items-center gap-2">
@@ -415,20 +431,6 @@ const handleCopyLineUserId = async () => {
                   </div>
                 </div>
               </div>
-              {!editingName && (
-                <button
-                  onClick={() => {
-                    setNewFullName(user.FullName)
-                    setEditingName(true)
-                  }}
-                  className="px-3 py-2 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors flex items-center gap-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                  แก้ไขชื่อ
-                </button>
-              )}
             </div>
           </div>
         )}

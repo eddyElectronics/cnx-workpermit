@@ -52,6 +52,7 @@ export default function CreatePermitPage() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [minStartDate, setMinStartDate] = useState('')
   const [minEndDate, setMinEndDate] = useState('')
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
 
   const {
     register,
@@ -69,6 +70,13 @@ export default function CreatePermitPage() {
     setMinStartDate(todayStr)
     setMinEndDate(todayStr)
   }, [])
+
+  useEffect(() => {
+    // Cleanup preview URLs on unmount
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [previewUrls])
 
   useEffect(() => {
     if (!user || !liffProfile) {
@@ -145,7 +153,11 @@ export default function CreatePermitPage() {
       return
     }
 
+    // Create preview URLs for new files
+    const newPreviewUrls = fileArray.map(file => URL.createObjectURL(file))
+    
     setUploadedFiles(prev => [...prev, ...fileArray])
+    setPreviewUrls(prev => [...prev, ...newPreviewUrls])
   }
 
   const handleUploadClick = () => {
@@ -154,7 +166,11 @@ export default function CreatePermitPage() {
   }
 
   const removeFile = (index: number) => {
+    // Revoke the preview URL to free memory
+    URL.revokeObjectURL(previewUrls[index])
+    
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -542,20 +558,16 @@ export default function CreatePermitPage() {
                       key={index}
                       className="flex items-center justify-between bg-gray-50 p-2 rounded border"
                     >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <svg
-                          className="w-5 h-5 text-gray-400 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {/* Image Preview */}
+                        <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden border border-gray-200">
+                          <Image
+                            src={previewUrls[index]}
+                            alt={file.name}
+                            fill
+                            className="object-cover"
                           />
-                        </svg>
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-gray-900 truncate">
                             {file.name}
@@ -568,7 +580,7 @@ export default function CreatePermitPage() {
                       <button
                         type="button"
                         onClick={() => removeFile(index)}
-                        className="text-red-600 hover:text-red-800 p-1"
+                        className="text-red-600 hover:text-red-800 p-1 flex-shrink-0"
                       >
                         <svg
                           className="w-5 h-5"

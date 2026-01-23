@@ -183,10 +183,24 @@ export default function AdminPermitsPage() {
   const handleUpdateStatus = async (permitId: number, newStatus: string) => {
     if (!user) return
 
-    // Confirm dialog
-    const confirmMessage = newStatus === PERMIT_STATUS.APPROVED 
+    // Find the permit to show details in confirmation
+    const permit = permits.find(p => p.PermitId === permitId)
+    
+    // Confirm dialog with details
+    let confirmMessage = newStatus === PERMIT_STATUS.APPROVED 
       ? 'คุณต้องการอนุมัติคำขอนี้หรือไม่?' 
       : 'คุณต้องการไม่อนุมัติคำขอนี้หรือไม่?'
+    
+    if (permit) {
+      confirmMessage += `\n\nรายละเอียด:`
+      confirmMessage += `\nเลขที่: ${permit.PermitNumber}`
+      confirmMessage += `\nผู้ขอ: ${permit.OwnerName}`
+      confirmMessage += `\nบริษัท: ${permit.CompanyName}`
+      confirmMessage += `\nช่วงเวลา: ${permit.WorkShift || '-'}`
+      confirmMessage += `\nระยะเวลา: ${permit.StartDate || '-'} ถึง ${permit.EndDate || '-'}`
+      confirmMessage += `\n\n⚠️ กรุณาอ่านกฎ ระเบียบ ข้อบังคับ และวิธีการปฏิบัติงาน`
+      confirmMessage += `\nที่: https://safetycnx.wixsite.com/safetycnx`
+    }
     
     if (!confirm(confirmMessage)) {
       return
@@ -196,8 +210,6 @@ export default function AdminPermitsPage() {
     setUpdatingId(permitId)
     
     try {
-      // Find the permit to get details for notification
-      const permit = permits.find(p => p.PermitId === permitId)
       
       // Step 1: Update status in database (wait for API response)
       console.log('Updating status in database...')

@@ -9,6 +9,7 @@ import { useUserStore } from '@/lib/store'
 import { apiService, WorkPermit } from '@/lib/api'
 import { liffService } from '@/lib/liff'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { getThailandISOString } from '@/lib/date-utils'
 
 export default function PermitListPage() {
   const router = useRouter()

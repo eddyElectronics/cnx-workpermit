@@ -20,6 +20,13 @@ export async function POST(request: Request) {
     
     console.log('LINE Notify - Permit Number:', permitNumber)
 
+    // Format dates from YYYY-MM-DD to DD/MM/YYYY
+    const formatDate = (dateStr: string) => {
+      if (!dateStr) return '-'
+      const [year, month, day] = dateStr.split('-')
+      return `${day}/${month}/${year}`
+    }
+
     const message = `🔔 มีคำขอเข้าปฏิบัติงานใหม่
 
 📋 เลขที่: ${permitNumber || 'N/A'}
@@ -28,7 +35,7 @@ export async function POST(request: Request) {
 📍 พื้นที่: ${area || '-'}
 🔧 ประเภทงาน: ${workType || '-'}
 ⏰ ช่วงเวลา: ${workShift}
-📅 ระยะเวลา: ${startDate} ถึง ${endDate}
+📅 ระยะเวลา: ${formatDate(startDate)} ถึง ${formatDate(endDate)}
 📌 สถานะ: รอตรวจสอบ
 
 กรุณาอนุมัติ Work Permit`

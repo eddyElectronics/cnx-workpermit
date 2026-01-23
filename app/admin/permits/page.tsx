@@ -186,6 +186,16 @@ export default function AdminPermitsPage() {
     // Find the permit to show details in confirmation
     const permit = permits.find(p => p.PermitId === permitId)
     
+    // Helper function to format date as DD/MM/YYYY
+    const formatDate = (dateString: string) => {
+      if (!dateString) return '-'
+      const date = new Date(dateString)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}/${month}/${year}`
+    }
+    
     // Confirm dialog with details
     let confirmMessage = newStatus === PERMIT_STATUS.APPROVED 
       ? 'คุณต้องการอนุมัติคำขอนี้หรือไม่?' 
@@ -197,7 +207,7 @@ export default function AdminPermitsPage() {
       confirmMessage += `\nผู้ขอ: ${permit.OwnerName}`
       confirmMessage += `\nบริษัท: ${permit.CompanyName}`
       confirmMessage += `\nช่วงเวลา: ${permit.WorkShift || '-'}`
-      confirmMessage += `\nระยะเวลา: ${permit.StartDate || '-'} ถึง ${permit.EndDate || '-'}`
+      confirmMessage += `\nระยะเวลา: ${formatDate(permit.StartDate)} ถึง ${formatDate(permit.EndDate)}`
       confirmMessage += `\n\n⚠️ กรุณาอ่านกฎ ระเบียบ ข้อบังคับ และวิธีการปฏิบัติงาน`
       confirmMessage += `\nที่: https://safetycnx.wixsite.com/safetycnx`
     }

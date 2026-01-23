@@ -28,6 +28,16 @@ export async function POST(request: Request) {
       )
     }
 
+    // Helper function to format date as DD/MM/YYYY
+    const formatDate = (dateString: string) => {
+      if (!dateString) return '-'
+      const date = new Date(dateString)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}/${month}/${year}`
+    }
+    
     // สร้างข้อความตามสถานะ
     const statusText = status === 'อนุมัติ' ? '✅ อนุมัติ' : '❌ ไม่อนุมัติ'
     const statusEmoji = status === 'อนุมัติ' ? '🎉' : '⚠️'
@@ -40,7 +50,7 @@ export async function POST(request: Request) {
 📍 พื้นที่: ${area || '-'}
 🔧 ประเภทงาน: ${workType || '-'}
 ⏰ ช่วงเวลา: ${workShift || '-'}
-📅 ระยะเวลา: ${startDate || '-'} ถึง ${endDate || '-'}
+📅 ระยะเวลา: ${formatDate(startDate)} ถึง ${formatDate(endDate)}`
 
 📌 สถานะ: ${statusText}
 ✍️ ผู้อนุมัติ: ${approvedBy || '-'}

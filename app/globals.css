@@ -49,10 +49,23 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Mobile Responsive Base */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+}
+
 /* Custom Components */
 @layer components {
   .card {
     @apply bg-white rounded-xl shadow-md p-6;
+  }
+
+  @media (max-width: 640px) {
+    .card {
+      @apply p-4 rounded-lg;
+    }
   }
 
   .bg-linear-to-br {
@@ -63,12 +76,30 @@ body {
     @apply bg-primary-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed;
   }
 
+  @media (max-width: 640px) {
+    .btn-primary {
+      @apply px-4 py-2 text-sm;
+    }
+  }
+
   .btn-secondary {
     @apply bg-white text-primary-600 border-2 border-primary-600 px-6 py-3 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 disabled:cursor-not-allowed;
   }
 
+  @media (max-width: 640px) {
+    .btn-secondary {
+      @apply px-4 py-2 text-sm;
+    }
+  }
+
   .input {
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900 placeholder:text-gray-500;
+  }
+
+  @media (max-width: 640px) {
+    .input {
+      @apply px-3 py-2 text-base;
+    }
   }
 
   select.input {
@@ -85,5 +116,42 @@ body {
 
   .error-text {
     @apply text-sm text-red-600 mt-1;
+  }
+
+  /* Mobile utility classes */
+  .mobile-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .mobile-text-base {
+    @apply text-sm sm:text-base;
+  }
+
+  .mobile-text-lg {
+    @apply text-base sm:text-lg;
+  }
+
+  .mobile-text-xl {
+    @apply text-lg sm:text-xl;
+  }
+
+  .mobile-text-2xl {
+    @apply text-xl sm:text-2xl;
+  }
+
+  .mobile-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4;
+  }
+
+  .mobile-flex {
+    @apply flex flex-col sm:flex-row gap-2 sm:gap-4;
+  }
+
+  .mobile-hidden {
+    @apply hidden sm:block;
+  }
+
+  .mobile-only {
+    @apply block sm:hidden;
   }
 }

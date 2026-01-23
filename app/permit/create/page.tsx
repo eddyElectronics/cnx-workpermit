@@ -127,21 +127,21 @@ export default function CreatePermitPage() {
     setUploadError(null)
     const fileArray = Array.from(files)
     
-    // Validate file size (max 10MB per file)
-    const maxSize = 10 * 1024 * 1024
-    const invalidFiles = fileArray.filter(f => f.size > maxSize)
-    
-    if (invalidFiles.length > 0) {
-      setUploadError('ไฟล์บางไฟล์มีขนาดเกิน 10MB')
-      return
-    }
-
-    // Validate file type (images and PDFs only)
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
+    // Validate file type (images only)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
     const invalidTypes = fileArray.filter(f => !allowedTypes.includes(f.type))
     
     if (invalidTypes.length > 0) {
-      setUploadError('รองรับเฉพาะไฟล์ JPG, PNG และ PDF เท่านั้น')
+      setUploadError('รองรับเฉพาะไฟล์รูปภาพ JPG และ PNG เท่านั้น')
+      return
+    }
+    
+    // Validate file size (max 250KB per file)
+    const maxSize = 250 * 1024
+    const invalidFiles = fileArray.filter(f => f.size > maxSize)
+    
+    if (invalidFiles.length > 0) {
+      setUploadError('ไฟล์รูปภาพต้องมีขนาดไม่เกิน 250KB')
       return
     }
 
@@ -510,7 +510,7 @@ export default function CreatePermitPage() {
                 id="file-upload"
                 type="file"
                 multiple
-                accept="image/jpeg,image/jpg,image/png,application/pdf"
+                accept="image/jpeg,image/jpg,image/png"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -528,7 +528,7 @@ export default function CreatePermitPage() {
                 เลือกไฟล์
               </button>
               <p className="text-xs text-gray-500 mt-1">
-                รองรับไฟล์ JPG, PNG, PDF (สูงสุด 10MB ต่อไฟล์)
+                รองรับเฉพาะไฟล์รูปภาพ JPG, PNG (สูงสุด 250KB ต่อไฟล์)
               </p>
               {uploadError && (
                 <p className="error-text">{uploadError}</p>

@@ -294,14 +294,14 @@ const handleCopyLineUserId = async () => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-primary-50 to-primary-100 p-4">
-      <div className="max-w-4xl mx-auto py-8">
+    <div className="min-h-screen bg-linear-to-br from-primary-50 to-primary-100 p-2 sm:p-4 w-full overflow-x-hidden">
+      <div className="max-w-4xl mx-auto py-4 sm:py-8 w-full px-2 sm:px-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             {showApproved ? 'รายการตรวจสอบ' : 'รายการคำขอของฉัน'}
           </h1>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               onClick={() => setShowApproved(!showApproved)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -658,10 +658,10 @@ const handleCopyLineUserId = async () => {
         )}
         {/* Audit Modal */}
         {auditPermitId && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto"
             onClick={() => setAuditPermitId(null)}
           >
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden my-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4 border-b flex justify-between items-center bg-blue-600 text-white">

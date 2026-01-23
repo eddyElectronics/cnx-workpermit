@@ -324,7 +324,7 @@ export default function CreatePermitPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-primary-50 to-primary-100 p-4">
-      <div className="max-w-2xl mx-auto py-8">
+      <div className="max-w-2xl mx-auto py-4 sm:py-8 px-2 sm:px-4 w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">

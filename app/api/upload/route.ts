@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
+import { writeFile, mkdir } from 'fs/promises'
+import { existsSync } from 'fs'
+import path from 'path'
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +17,9 @@ export async function POST(request: Request) {
       )
     }
 
+    // Check if Vercel Blob is available
+    const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN
+
     const uploadedFiles = []
 
     for (const file of files) {
@@ -22,21 +28,43 @@ export async function POST(request: Request) {
       const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
       const filename = `${timestamp}_${safeName}`
       
-      // Upload to Vercel Blob
-      // Path format: permits/{permitId}/{filename}
-      const blob = await put(`permits/${permitId}/${filename}`, file, {
-        access: 'public',
-      })
+      let filePath = ''
+
+      if (hasVercelBlob) {
+        // Upload to Vercel Blob Storage
+        try {
+          const blob = await put(`permits/${permitId}/${filename}`, file, {
+            access: 'public',
+          })
+          filePath = blob.url
+          console.log('File uploaded to Vercel Blob:', blob.url)
+        } catch (error) {
+          console.error('Vercel Blob upload failed:', error)
+          throw error
+        }
+      } else {
+        // Fallback to local filesystem (for development)
+        const uploadsDir = path.join(process.cwd(), 'public', 'uploads', permitId)
+        if (!existsSync(uploadsDir)) {
+          await mkdir(uploadsDir, { recursive: true })
+        }
+
+        const bytes = await file.arrayBuffer()
+        const buffer = Buffer.from(bytes)
+        const filepath = path.join(uploadsDir, filename)
+        await writeFile(filepath, buffer)
+        
+        filePath = `/uploads/${permitId}/${filename}`
+        console.log('File uploaded locally:', filePath)
+      }
 
       uploadedFiles.push({
         originalName: file.name,
         filename: filename,
-        path: blob.url, // Use Vercel Blob URL instead of local path
+        path: filePath,
         size: file.size,
         type: file.type,
       })
-
-      console.log('File uploaded to Vercel Blob:', blob.url)
     }
 
     // Save file info to database

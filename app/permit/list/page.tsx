@@ -341,13 +341,20 @@ const handleCopyLineUserId = async () => {
             <div className="flex items-start gap-3">
               <div className="flex flex-col items-center gap-2">
                 {liffProfile?.pictureUrl && (
-                  <Image
-                    src={liffProfile.pictureUrl}
-                    alt={user.FullName}
-                    width={64}
-                    height={64}
-                    className="rounded-full"
-                  />
+                  <div className="relative group cursor-pointer" onClick={handleCopyLineUserId} title="คลิกเพื่อคัดลอก LINE ID">
+                    <Image
+                      src={liffProfile.pictureUrl}
+                      alt={user.FullName}
+                      width={64}
+                      height={64}
+                      className="rounded-full"
+                    />
+                    {copied && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-full">
+                        <span className="text-white text-xs font-semibold">Copied!</span>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {!editingName && (
                   <button
@@ -400,35 +407,6 @@ const handleCopyLineUserId = async () => {
                   )}
                   <p className="text-sm text-gray-600">{user.CompanyName}</p>
                   <p className="text-sm text-gray-500">{user.PhoneNumber}</p>
-                  
-                  {/* LINE User ID */}
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-gray-400" style={{ fontSize: '6px' }}>LINE ID:</span>
-                    <code className="bg-gray-100 px-2 py-1 rounded text-gray-600" style={{ fontSize: '6px' }}>
-                      {user.LineUserId}
-                    </code>
-                    <button
-                      onClick={handleCopyLineUserId}
-                      className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded transition-colors flex items-center gap-1"
-                      title="Copy LINE User ID"
-                    >
-                      {copied ? (
-                        <>
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          Copy
-                        </>
-                      )}
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>

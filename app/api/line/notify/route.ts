@@ -38,7 +38,8 @@ export async function POST(request: Request) {
 📅 ระยะเวลา: ${formatDate(startDate)} ถึง ${formatDate(endDate)}
 📌 สถานะ: รอตรวจสอบ
 
-กรุณาอนุมัติ Work Permit`
+กรุณาอนุมัติ Work Permit
+https://liff.line.me/1654076318-08gnXfNt`
 
     console.log('LINE Notify - Message:', message)
 

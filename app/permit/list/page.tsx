@@ -223,8 +223,8 @@ const handleCopyLineUserId = async () => {
         // Handle API response structure { data: [...] }
         const data = Array.isArray(result) ? result : (result as { data: WorkPermit[] })?.data || []
         
-        // Sort by PermitId descending (latest first)
-        const sortedData = data.sort((a, b) => b.PermitId - a.PermitId)
+        // Sort by CreatedDate descending (latest first)
+        const sortedData = data.sort((a, b) => new Date(b.CreatedDate).getTime() - new Date(a.CreatedDate).getTime())
         
         setPermits(sortedData)
         

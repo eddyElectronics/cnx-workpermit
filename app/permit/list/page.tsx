@@ -217,7 +217,8 @@ const handleCopyLineUserId = async () => {
 
     const loadData = async () => {
       try {
-        const result = await apiService.getUserWorkPermits(user.UserId)
+        // Get all permits from all users
+        const result = await apiService.getAllWorkPermits()
         console.log('Permits result:', result)
         
         // Handle API response structure { data: [...] }

@@ -222,7 +222,11 @@ const handleCopyLineUserId = async () => {
         
         // Handle API response structure { data: [...] }
         const data = Array.isArray(result) ? result : (result as { data: WorkPermit[] })?.data || []
-        setPermits(data)
+        
+        // Sort by PermitId descending (latest first)
+        const sortedData = data.sort((a, b) => b.PermitId - a.PermitId)
+        
+        setPermits(sortedData)
         
         // Load audit status for approved permits
         const approvedPermits = data.filter(p => p.Status === 'อนุมัติ')

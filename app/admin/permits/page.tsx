@@ -626,7 +626,7 @@ export default function AdminPermitsPage() {
                 )}
 
                 {/* Documents */}
-                {permit.DocumentCount > 0 && (
+                {(permit.DocumentCount ?? 0) > 0 && (
                   <div className="mb-4">
                     <button
                       onClick={() => loadDocuments(permit.PermitId)}

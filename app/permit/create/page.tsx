@@ -134,12 +134,12 @@ export default function CreatePermitPage() {
     setUploadError(null)
     const fileArray = Array.from(files)
     
-    // Validate file type (images only)
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+    // Validate file type (images and PDF)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
     const invalidTypes = fileArray.filter(f => !allowedTypes.includes(f.type))
     
     if (invalidTypes.length > 0) {
-      setUploadError('รองรับเฉพาะไฟล์รูปภาพ JPG และ PNG เท่านั้น')
+      setUploadError('รองรับเฉพาะไฟล์รูปภาพ JPG, PNG และ PDF เท่านั้น')
       return
     }
     
@@ -332,7 +332,7 @@ export default function CreatePermitPage() {
       setLoading(false)
     }
   }
-
+ช
   if (loadingData) {
     return <LoadingSpinner message="กำลังโหลดข้อมูล..." />
   }
@@ -525,7 +525,7 @@ export default function CreatePermitPage() {
                 id="file-upload"
                 type="file"
                 multiple
-                accept="image/jpeg,image/jpg,image/png"
+                accept="image/jpeg,image/jpg,image/png,application/pdf"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -543,7 +543,7 @@ export default function CreatePermitPage() {
                 เลือกไฟล์
               </button>
               <p className="text-xs text-gray-500 mt-1">
-                รองรับเฉพาะไฟล์รูปภาพ JPG, PNG (สูงสุด 250KB ต่อไฟล์)
+                รองรับเฉพาะไฟล์รูปภาพ JPG, PNG และ PDF (สูงสุด 250KB ต่อไฟล์)
               </p>
               {uploadError && (
                 <p className="error-text">{uploadError}</p>

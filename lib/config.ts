@@ -18,7 +18,7 @@ export const LINE_CONFIG = {
 export const WORK_SHIFTS = [
   { value: '08:00-17:00', label: '08:00-17:00 (กลางวัน)' },
   { value: '17:00-00:00', label: '17:00-00:00 (กลางคืน)' },
-  { value: '00:00-08:00', label: '00:00-08:00 (ดึก)' },
+  { value: '17:00-08:00', label: '17:00-08:00 (ดึก)' },
 ]
 
 // Status Options

@@ -332,7 +332,7 @@ export default function CreatePermitPage() {
       setLoading(false)
     }
   }
-ช
+
   if (loadingData) {
     return <LoadingSpinner message="กำลังโหลดข้อมูล..." />
   }

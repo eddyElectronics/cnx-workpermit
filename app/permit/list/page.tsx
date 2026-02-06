@@ -15,6 +15,7 @@ export default function PermitListPage() {
   const router = useRouter()
   const { user, liffProfile, setUser, clearUser } = useUserStore()
   const [permits, setPermits] = useState<WorkPermit[]>([])
+  const [allApprovedPermits, setAllApprovedPermits] = useState<WorkPermit[]>([])
   const [filteredPermits, setFilteredPermits] = useState<WorkPermit[]>([])
   const [filterDate, setFilterDate] = useState<string>('')
   const [showApproved, setShowApproved] = useState(false)
@@ -217,8 +218,8 @@ const handleCopyLineUserId = async () => {
 
     const loadData = async () => {
       try {
-        // Get all permits from all users
-        const result = await apiService.getAllWorkPermits()
+        // Get only user's own permits for "รายการคำขอของฉัน"
+        const result = await apiService.getUserWorkPermits(user.UserId)
         console.log('Permits result:', result)
         
         // Handle API response structure { data: [...] }
@@ -229,11 +230,18 @@ const handleCopyLineUserId = async () => {
         
         setPermits(sortedData)
         
-        // Load audit status for approved permits
-        const approvedPermits = data.filter(p => p.Status === 'อนุมัติ')
+        // Get all permits for audit view (all approved permits from all users)
+        const allResult = await apiService.getAllWorkPermits()
+        const allData = Array.isArray(allResult) ? allResult : (allResult as { data: WorkPermit[] })?.data || []
+        const allApproved = allData
+          .filter(p => p.Status === 'อนุมัติ')
+          .sort((a, b) => new Date(b.CreatedDate).getTime() - new Date(a.CreatedDate).getTime())
+        setAllApprovedPermits(allApproved)
+        
+        // Load audit status for all approved permits
         const auditedIds = new Set<number>()
         
-        for (const permit of approvedPermits) {
+        for (const permit of allApproved) {
           try {
             const response = await fetch(`/api/audit?permitId=${permit.PermitId}`)
             if (response.ok) {
@@ -259,14 +267,17 @@ const handleCopyLineUserId = async () => {
     loadData()
   }, [user, liffProfile, router])
 
-  // Filter permits based on selected date
+  // Filter permits based on selected date and view mode
   useEffect(() => {
+    // Use allApprovedPermits for audit view, user's permits for normal view
+    const sourcePermits = showApproved ? allApprovedPermits : permits
+    
     if (!filterDate) {
-      setFilteredPermits(permits)
+      setFilteredPermits(sourcePermits)
       return
     }
 
-    const filtered = permits.filter(permit => {
+    const filtered = sourcePermits.filter(permit => {
       if (!permit.StartDate || !permit.EndDate) return false
       
       const selectedDate = new Date(filterDate)
@@ -278,7 +289,7 @@ const handleCopyLineUserId = async () => {
     })
     
     setFilteredPermits(filtered)
-  }, [permits, filterDate])
+  }, [permits, allApprovedPermits, filterDate, showApproved])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -445,7 +456,9 @@ const handleCopyLineUserId = async () => {
               </button>
             )}
             <span className="text-sm text-gray-500">
-              {filterDate ? `กรองแล้ว ${filteredPermits.filter(p => !showApproved || p.Status === 'อนุมัติ').length} รายการ` : `ทั้งหมด ${permits.length} รายการ`}
+              {filterDate 
+                ? `กรองแล้ว ${filteredPermits.length} รายการ` 
+                : `ทั้งหมด ${showApproved ? allApprovedPermits.length : permits.length} รายการ`}
             </span>
           </div>
         </div>
@@ -459,7 +472,7 @@ const handleCopyLineUserId = async () => {
         {/* Permits List */}
         {showApproved ? (
           /* Approved Permits for Audit */
-          filteredPermits.filter(p => p.Status === 'อนุมัติ').length === 0 ? (
+          filteredPermits.length === 0 ? (
             <div className="card text-center py-12">
               <svg
                 className="w-16 h-16 mx-auto text-gray-400 mb-4"
@@ -478,7 +491,7 @@ const handleCopyLineUserId = async () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredPermits.filter(p => p.Status === 'อนุมัติ').map((permit) => (
+              {filteredPermits.map((permit) => (
                 <div key={permit.PermitId} className="card hover:shadow-lg transition-shadow bg-green-100">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -680,12 +693,12 @@ const handleCopyLineUserId = async () => {
                 <div className="mb-4 pb-4 border-b border-gray-200">
                   <p className="text-sm text-gray-600 mb-2">
                     คำขอ: <span className="font-semibold text-gray-900">
-                      {permits.find(p => p.PermitId === auditPermitId)?.PermitNumber}
+                      {(allApprovedPermits.find(p => p.PermitId === auditPermitId) || permits.find(p => p.PermitId === auditPermitId))?.PermitNumber}
                     </span>
                   </p>
                   <p className="text-sm text-gray-600">
                     เจ้าของงาน: <span className="font-semibold text-gray-900">
-                      {permits.find(p => p.PermitId === auditPermitId)?.OwnerName}
+                      {(allApprovedPermits.find(p => p.PermitId === auditPermitId) || permits.find(p => p.PermitId === auditPermitId))?.OwnerName}
                     </span>
                   </p>
                 </div>

@@ -60,6 +60,19 @@ ${status === 'อนุมัติ'
   : '❌ คำขอของคุณไม่ได้รับการอนุมัติ กรุณาติดต่อเจ้าหน้าที่เพื่อสอบถามรายละเอียดเพิ่มเติม'
 }`
 
+    const approvalSummaryMessage = `📣 แจ้งผลอนุมัติคำขอเข้าปฏิบัติงาน
+
+📋 เลขที่: ${permitNumber || 'N/A'}
+👤 เจ้าของงาน: ${ownerName}
+🏢 บริษัท: ${companyName}
+📍 พื้นที่: ${area || '-'}
+🔧 ประเภทงาน: ${workType || '-'}
+⏰ ช่วงเวลา: ${workShift || '-'}
+📅 ระยะเวลา: ${formatDate(startDate)} ถึง ${formatDate(endDate)}
+📌 สถานะ: ${statusText}
+✍️ ผู้อนุมัติ: ${approvedBy || '-'}
+`
+
     console.log('LINE Notify User - Sending to:', lineUserId)
     console.log('LINE Notify User - Message:', message)
 
@@ -82,6 +95,34 @@ ${status === 'อนุมัติ'
         },
       }
     )
+
+    if (status === 'อนุมัติ') {
+      const approvalNotifyTo = process.env.LINE_APPROVAL_NOTIFY_TO || 'C9c89cfb5eaca4ef26380e97427fb85a4'
+      const approvalAccessToken = process.env.LINE_APPROVAL_CHANNEL_ACCESS_TOKEN || LINE_CONFIG.channelAccessToken
+
+      if (!approvalAccessToken) {
+        throw new Error('LINE approval access token is not configured')
+      }
+
+      await axios.post(
+        'https://api.line.me/v2/bot/message/push',
+        {
+          to: approvalNotifyTo,
+          messages: [
+            {
+              type: 'text',
+              text: approvalSummaryMessage,
+            },
+          ],
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${approvalAccessToken}`,
+          },
+        }
+      )
+    }
 
     console.log('LINE Notify User - Response:', response.data)
 

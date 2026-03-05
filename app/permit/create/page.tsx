@@ -181,6 +181,11 @@ export default function CreatePermitPage() {
   const onSubmit = async (data: PermitForm) => {
     if (!user) return
 
+    if (uploadedFiles.length === 0) {
+      setUploadError('กรุณาแนบเอกสารประกอบอย่างน้อย 1 ไฟล์')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -520,7 +525,9 @@ export default function CreatePermitPage() {
 
             {/* File Upload */}
             <div>
-              <label className="label">อัพโหลดเอกสารประกอบ</label>
+              <label className="label">
+                อัพโหลดเอกสารประกอบ <span className="text-red-500">*</span>
+              </label>
               <input
                 id="file-upload"
                 type="file"

@@ -238,24 +238,25 @@ const handleCopyLineUserId = async () => {
           .sort((a, b) => new Date(b.CreatedDate).getTime() - new Date(a.CreatedDate).getTime())
         setAllApprovedPermits(allApproved)
         
-        // Load audit status for all approved permits
-        const auditedIds = new Set<number>()
-        
-        for (const permit of allApproved) {
+        // Load audit status for all approved permits in a single batch request
+        if (allApproved.length > 0) {
           try {
-            const response = await fetch(`/api/audit?permitId=${permit.PermitId}`)
+            const permitIds = allApproved.map(p => p.PermitId)
+            const response = await fetch('/api/audit/batch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ permitIds }),
+            })
             if (response.ok) {
               const result = await response.json()
-              if (result.success && result.data && result.data.length > 0) {
-                auditedIds.add(permit.PermitId)
+              if (result.success && Array.isArray(result.auditedPermitIds)) {
+                setAuditedPermits(new Set(result.auditedPermitIds))
               }
             }
           } catch (err) {
-            console.error(`Failed to check audit for permit ${permit.PermitId}:`, err)
+            console.error('Failed to batch check audits:', err)
           }
         }
-        
-        setAuditedPermits(auditedIds)
       } catch (err) {
         console.error('Failed to load permits:', err)
         setError('ไม่สามารถโหลดข้อมูลได้')

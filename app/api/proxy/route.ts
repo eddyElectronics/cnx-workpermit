@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
+  const requestId = request.headers.get('x-request-id') || `proxy_${crypto.randomUUID()}`
+  const requestAttempt = request.headers.get('x-request-attempt') || '1'
+
   try {
     const body = await request.json()
     
-    console.log('=== Proxy Request ===')
+    console.log(`=== Proxy Request [${requestId}] ===`)
+    console.log('Attempt:', requestAttempt)
     console.log('Database:', body.database)
     console.log('Has Query:', !!body.query)
     console.log('Has Procedure:', !!body.procedure)
@@ -15,14 +19,24 @@ export async function POST(request: Request) {
     if (!body.database) {
       return NextResponse.json(
         { error: 'Database name is required' },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            'x-request-id': requestId,
+          },
+        }
       )
     }
 
     if (!body.query && !body.procedure) {
       return NextResponse.json(
         { error: 'Either query or procedure is required' },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            'x-request-id': requestId,
+          },
+        }
       )
     }
 
@@ -36,7 +50,7 @@ export async function POST(request: Request) {
     const endpoint = body.procedure ? '/procedure' : '/query'
     const fullUrl = `${apiUrl}${endpoint}`
     
-    console.log('Calling API:', fullUrl)
+    console.log(`Calling API [${requestId}]:`, fullUrl)
     console.log('Request body:', JSON.stringify(body, null, 2))
     
     const response = await fetch(fullUrl, {
@@ -44,18 +58,20 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
+        'x-request-id': requestId,
+        'x-request-attempt': requestAttempt,
       },
       body: JSON.stringify(body),
     })
 
-    console.log('=== API Response ===')
+    console.log(`=== API Response [${requestId}] ===`)
     console.log('Status:', response.status)
     console.log('Status Text:', response.statusText)
     console.log('OK:', response.ok)
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('=== API Error ===')
+      console.error(`=== API Error [${requestId}] ===`)
       console.error('Status:', response.status)
       console.error('Status Text:', response.statusText)
       console.error('Error Text:', errorText)
@@ -92,14 +108,20 @@ export async function POST(request: Request) {
           details: errorDetails, 
           status: response.status,
           statusText: response.statusText,
-          requestBody: body
+          requestBody: body,
+          requestId,
         },
-        { status: response.status }
+        {
+          status: response.status,
+          headers: {
+            'x-request-id': requestId,
+          },
+        }
       )
     }
 
     const data = await response.json()
-    console.log('=== API Success ===')
+    console.log(`=== API Success [${requestId}] ===`)
     console.log('Response data type:', typeof data)
     console.log('Has data:', !!data)
     
@@ -129,13 +151,24 @@ export async function POST(request: Request) {
     // Validate and clean response data
     if (!data || data === null) {
       console.warn('API returned null or undefined, returning empty data structure')
-      return NextResponse.json({ data: [] })
+      return NextResponse.json(
+        { data: [], requestId },
+        {
+          headers: {
+            'x-request-id': requestId,
+          },
+        }
+      )
     }
     
-    return NextResponse.json(data)
+    return NextResponse.json(data, {
+      headers: {
+        'x-request-id': requestId,
+      },
+    })
     
   } catch (error: unknown) {
-    console.error('=== Proxy Catch Error ===')
+    console.error(`=== Proxy Catch Error [${requestId}] ===`)
     console.error('Error type:', typeof error)
     console.error('Error:', error)
     
@@ -157,9 +190,15 @@ export async function POST(request: Request) {
       { 
         success: false,
         error: message,
-        details: details 
+        details: details,
+        requestId,
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'x-request-id': requestId,
+        },
+      }
     )
   }
 }

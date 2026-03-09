@@ -268,25 +268,34 @@ const handleCopyLineUserId = async () => {
   }, [user, liffProfile, router])
 
   // Filter permits based on selected date and view mode
+  // Only show permits created within the last 2 months
   useEffect(() => {
     // Use allApprovedPermits for audit view, user's permits for normal view
     const sourcePermits = showApproved ? allApprovedPermits : permits
-    
-    if (!filterDate) {
-      setFilteredPermits(sourcePermits)
-      return
-    }
 
-    const filtered = sourcePermits.filter(permit => {
-      if (!permit.StartDate || !permit.EndDate) return false
-      
-      const selectedDate = new Date(filterDate)
-      const startDate = new Date(permit.StartDate)
-      const endDate = new Date(permit.EndDate)
-      
-      // Check if selected date falls within the work period
-      return selectedDate >= startDate && selectedDate <= endDate
+    // Calculate 2-month cutoff date
+    const now = new Date()
+    const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, now.getDate())
+
+    // Filter: only permits created within last 2 months
+    let filtered = sourcePermits.filter(permit => {
+      if (!permit.CreatedDate) return false
+      return new Date(permit.CreatedDate) >= twoMonthsAgo
     })
+
+    // Additionally filter by selected date if provided
+    if (filterDate) {
+      filtered = filtered.filter(permit => {
+        if (!permit.StartDate || !permit.EndDate) return false
+        
+        const selectedDate = new Date(filterDate)
+        const startDate = new Date(permit.StartDate)
+        const endDate = new Date(permit.EndDate)
+        
+        // Check if selected date falls within the work period
+        return selectedDate >= startDate && selectedDate <= endDate
+      })
+    }
     
     setFilteredPermits(filtered)
   }, [permits, allApprovedPermits, filterDate, showApproved])

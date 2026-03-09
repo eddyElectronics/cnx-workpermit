@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+function getOrCreateRequestId(request: NextRequest, prefix: string): string {
+  return request.headers.get('x-request-id') || `${prefix}_${crypto.randomUUID()}`
+}
+
 export async function POST(request: NextRequest) {
+  const requestId = getOrCreateRequestId(request, 'audit_post')
+  const requestAttempt = request.headers.get('x-request-attempt') || '1'
+
   try {
     const body = await request.json()
     const {
@@ -43,7 +50,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Creating audit for permit:', permitId, 'by user:', auditedBy)
+    console.log(`[${requestId}] Creating audit for permit:`, permitId, 'by user:', auditedBy)
 
     // Build parameters - all checkboxes default to false if not provided
     const parameters: any = {
@@ -87,6 +94,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
+        'x-request-id': requestId,
+        'x-request-attempt': requestAttempt,
       },
       body: JSON.stringify({
         database: 'CNXWorkPermit',
@@ -97,24 +106,39 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('API error:', errorText)
+      console.error(`[${requestId}] API error:`, errorText)
       throw new Error(`Failed to create audit: ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('Audit created successfully:', data)
-    return NextResponse.json({ success: true, data: data.data || data })
-  } catch (error: any) {
-    console.error('Audit creation error:', error.message)
-    console.error('Error details:', error)
+    console.log(`[${requestId}] Audit created successfully`)
     return NextResponse.json(
-      { error: error.message || 'Failed to create audit' },
-      { status: 500 }
+      { success: true, data: data.data || data, requestId },
+      {
+        headers: {
+          'x-request-id': requestId,
+        },
+      }
+    )
+  } catch (error: any) {
+    console.error(`[${requestId}] Audit creation error:`, error.message)
+    console.error(`[${requestId}] Error details:`, error)
+    return NextResponse.json(
+      { error: error.message || 'Failed to create audit', requestId },
+      {
+        status: 500,
+        headers: {
+          'x-request-id': requestId,
+        },
+      }
     )
   }
 }
 
 export async function GET(request: NextRequest) {
+  const requestId = getOrCreateRequestId(request, 'audit_get')
+  const requestAttempt = request.headers.get('x-request-attempt') || '1'
+
   try {
     const { searchParams } = new URL(request.url)
     const permitId = searchParams.get('permitId')
@@ -126,7 +150,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('Getting audits for permit:', permitId)
+    console.log(`[${requestId}] Getting audits for permit:`, permitId)
 
     // Call external API with procedure endpoint
     const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.airportthai.co.th/proxy/api'}/procedure`
@@ -137,6 +161,8 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
+        'x-request-id': requestId,
+        'x-request-attempt': requestAttempt,
       },
       body: JSON.stringify({
         database: 'CNXWorkPermit',
@@ -149,19 +175,31 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('API error:', errorText)
+      console.error(`[${requestId}] API error:`, errorText)
       throw new Error(`Failed to get audits: ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('Audits retrieved successfully:', data)
-    return NextResponse.json({ success: true, data: data.data || data })
-  } catch (error: any) {
-    console.error('Get audits error:', error.message)
-    console.error('Error details:', error)
+    console.log(`[${requestId}] Audits retrieved successfully`)
     return NextResponse.json(
-      { error: error.message || 'Failed to get audits' },
-      { status: 500 }
+      { success: true, data: data.data || data, requestId },
+      {
+        headers: {
+          'x-request-id': requestId,
+        },
+      }
+    )
+  } catch (error: any) {
+    console.error(`[${requestId}] Get audits error:`, error.message)
+    console.error(`[${requestId}] Error details:`, error)
+    return NextResponse.json(
+      { error: error.message || 'Failed to get audits', requestId },
+      {
+        status: 500,
+        headers: {
+          'x-request-id': requestId,
+        },
+      }
     )
   }
 }

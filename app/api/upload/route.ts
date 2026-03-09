@@ -4,7 +4,13 @@ import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
+function getOrCreateRequestId(request: Request): string {
+  return request.headers.get('x-request-id') || `upload_${crypto.randomUUID()}`
+}
+
 export async function POST(request: Request) {
+  const baseRequestId = getOrCreateRequestId(request)
+
   try {
     const formData = await request.formData()
     const permitId = formData.get('permitId') as string
@@ -68,7 +74,7 @@ export async function POST(request: Request) {
     }
 
     // Save file info to database
-    console.log('=== Starting database save process ===')
+    console.log(`=== Starting database save process [${baseRequestId}] ===`)
     console.log('PermitId:', permitId, 'Type:', typeof permitId)
     console.log('Number of files to save:', uploadedFiles.length)
     
@@ -76,8 +82,9 @@ export async function POST(request: Request) {
     
     for (let i = 0; i < uploadedFiles.length; i++) {
       const file = uploadedFiles[i]
+      const requestId = `${baseRequestId}_file_${i + 1}`
       try {
-        console.log(`\n--- Saving file ${i + 1}/${uploadedFiles.length} ---`)
+        console.log(`\n--- Saving file ${i + 1}/${uploadedFiles.length} [${requestId}] ---`)
         console.log('Document details:', {
           PermitId: parseInt(permitId),
           DocumentName: file.originalName,
@@ -105,48 +112,50 @@ export async function POST(request: Request) {
         const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
         const endpoint = `${apiUrl}/procedure`
         
-        console.log('Calling external API directly:', endpoint)
+        console.log(`Calling external API directly [${requestId}]:`, endpoint)
         
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
             'x-api-key': apiKey,
+            'x-request-id': requestId,
+            'x-request-attempt': '1',
           },
           body: JSON.stringify(requestBody),
         }).catch((fetchError) => {
-          console.error('Fetch error:', fetchError)
-          console.error('Fetch error message:', fetchError.message)
+          console.error(`[${requestId}] Fetch error:`, fetchError)
+          console.error(`[${requestId}] Fetch error message:`, fetchError.message)
           throw new Error(`Database call failed: ${fetchError.message}`)
         })
         
-        console.log('Response status:', response.status)
+        console.log(`[${requestId}] Response status:`, response.status)
         
         const responseText = await response.text()
-        console.log('Response body:', responseText)
+        console.log(`[${requestId}] Response body:`, responseText)
         
         if (!response.ok) {
           const errorMsg = `HTTP ${response.status}: ${responseText}`
-          console.error('Database save failed:', errorMsg)
-          dbErrors.push({ file: file.originalName, error: errorMsg })
+          console.error(`[${requestId}] Database save failed:`, errorMsg)
+          dbErrors.push({ file: file.originalName, error: errorMsg, requestId })
           continue
         }
         
         try {
           const result = JSON.parse(responseText)
-          console.log('Document saved successfully:', result)
+          console.log(`[${requestId}] Document saved successfully:`, result)
         } catch (e) {
-          console.log('Response is not JSON:', responseText)
+          console.log(`[${requestId}] Response is not JSON:`, responseText)
         }
         
       } catch (fileError) {
         const errorMsg = fileError instanceof Error ? fileError.message : String(fileError)
-        console.error(`Failed to save file ${file.originalName}:`, errorMsg)
-        dbErrors.push({ file: file.originalName, error: errorMsg })
+        console.error(`[${requestId}] Failed to save file ${file.originalName}:`, errorMsg)
+        dbErrors.push({ file: file.originalName, error: errorMsg, requestId })
       }
     }
     
-    console.log('=== Database save process complete ===')
+    console.log(`=== Database save process complete [${baseRequestId}] ===`)
     console.log('Errors:', dbErrors.length)
     
     if (dbErrors.length > 0) {
@@ -156,17 +165,39 @@ export async function POST(request: Request) {
         error: 'ไฟล์อัพโหลดสำเร็จแต่บันทึกลงฐานข้อมูลไม่สำเร็จ',
         details: dbErrors,
         files: uploadedFiles,
-      }, { status: 207 })
+        requestId: baseRequestId,
+      }, {
+        status: 207,
+        headers: {
+          'x-request-id': baseRequestId,
+        },
+      })
     }
 
-    return NextResponse.json({
-      success: true,
-      files: uploadedFiles,
-      message: `อัพโหลด ${uploadedFiles.length} ไฟล์สำเร็จ`,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        files: uploadedFiles,
+        message: `อัพโหลด ${uploadedFiles.length} ไฟล์สำเร็จ`,
+        requestId: baseRequestId,
+      },
+      {
+        headers: {
+          'x-request-id': baseRequestId,
+        },
+      }
+    )
   } catch (error: unknown) {
-    console.error('Upload error:', error)
+    console.error(`[${baseRequestId}] Upload error:`, error)
     const message = error instanceof Error ? error.message : 'อัพโหลดไฟล์ไม่สำเร็จ'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json(
+      { error: message, requestId: baseRequestId },
+      {
+        status: 500,
+        headers: {
+          'x-request-id': baseRequestId,
+        },
+      }
+    )
   }
 }

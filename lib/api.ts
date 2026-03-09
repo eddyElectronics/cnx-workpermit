@@ -1,6 +1,9 @@
 import axios from 'axios'
 import { API_CONFIG } from './config'
 
+const REQUEST_ID_HEADER = 'x-request-id'
+const REQUEST_ATTEMPT_HEADER = 'x-request-attempt'
+
 // Global rate limiter
 let lastRequestTime = 0
 const MIN_REQUEST_INTERVAL = 2000 // 2 seconds between requests (increased)
@@ -33,6 +36,25 @@ export const apiClient = axios.create({
 const apiCache = new Map<string, { data: any; timestamp: number }>()
 const CACHE_DURATION = 30000 // 30 seconds
 
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+function parseConfigData(data: unknown): any {
+  if (!data) return null
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data)
+    } catch {
+      return null
+    }
+  }
+  if (typeof data === 'object') {
+    return data
+  }
+  return null
+}
+
 // Helper to create cache key
 function getCacheKey(url: string, data: any): string {
   return `${url}:${JSON.stringify(data)}`
@@ -56,15 +78,33 @@ function setCache(key: string, data: any): void {
 // Add request interceptor for caching
 apiClient.interceptors.request.use(
   (config) => {
+    const requestConfig = config as any
+
+    // Keep one request ID for one logical request (including retries).
+    if (!requestConfig.__requestId) {
+      requestConfig.__requestId = generateRequestId()
+    }
+
+    if (!requestConfig.headers) {
+      requestConfig.headers = {}
+    }
+
+    const attempt = (requestConfig.__retryCount || 0) + 1
+    requestConfig.headers[REQUEST_ID_HEADER] = requestConfig.__requestId
+    requestConfig.headers[REQUEST_ATTEMPT_HEADER] = String(attempt)
+
     // Only cache GET-like queries
-    if (config.data && !config.data.procedure) {
-      const cacheKey = getCacheKey(config.url || '', config.data)
+    const requestData = parseConfigData(config.data)
+    if (requestData && !requestData.procedure) {
+      const cacheKey = getCacheKey(config.url || '', requestData)
       const cached = getFromCache(cacheKey)
       if (cached) {
         // Return cached response
-        return Promise.reject({ __cached: true, data: cached })
+        return Promise.reject({ __cached: true, data: cached, __requestId: requestConfig.__requestId })
       }
     }
+
+    console.log(`➡️ API Request [${requestConfig.__requestId}] attempt ${attempt}`)
     return config
   }
 )
@@ -72,11 +112,17 @@ apiClient.interceptors.request.use(
 // Add response interceptor with retry logic
 apiClient.interceptors.response.use(
   (response) => {
+    const responseConfig = response.config as any
+    const requestId = responseConfig.__requestId || 'N/A'
+
     // Cache successful responses
-    if (response.config.data && !JSON.parse(response.config.data).procedure) {
-      const cacheKey = getCacheKey(response.config.url || '', JSON.parse(response.config.data))
+    const requestData = parseConfigData(response.config.data)
+    if (requestData && !requestData.procedure) {
+      const cacheKey = getCacheKey(response.config.url || '', requestData)
       setCache(cacheKey, response.data)
     }
+
+    console.log(`✅ API Response [${requestId}] status ${response.status}`)
     return response
   },
   async (error) => {
@@ -85,7 +131,8 @@ apiClient.interceptors.response.use(
       return Promise.resolve({ data: error.data })
     }
     
-    const config = error.config
+    const config = error.config as any
+    const requestId = config?.__requestId || error.__requestId || 'N/A'
     
     if (error.response) {
       const status = error.response.status
@@ -95,19 +142,26 @@ apiClient.interceptors.response.use(
         config.__retryCount = (config.__retryCount || 0) + 1
         const delay = Math.min(2000 * Math.pow(2, config.__retryCount), 10000) // Max 10s
         
-        console.warn(`⏳ Rate limit hit (429), retrying in ${delay}ms... (attempt ${config.__retryCount}/5)`)
+        if (!config.headers) {
+          config.headers = {}
+        }
+
+        config.headers[REQUEST_ID_HEADER] = requestId
+        config.headers[REQUEST_ATTEMPT_HEADER] = String(config.__retryCount + 1)
+
+        console.warn(`⏳ Rate limit hit (429) [${requestId}], retrying in ${delay}ms... (attempt ${config.__retryCount}/5)`)
         
         await new Promise(resolve => setTimeout(resolve, delay))
         return apiClient.request(config)
       }
       
-      console.error('API Error Response:', status, error.response.data)
+      console.error(`API Error Response [${requestId}]:`, status, error.response.data)
     } else if (error.request) {
-      console.error('API Network Error - No response received')
+      console.error(`API Network Error [${requestId}] - No response received`)
       console.error('Request URL:', error.config?.url)
       console.error('Request Method:', error.config?.method)
     } else {
-      console.error('API Error:', error.message)
+      console.error(`API Error [${requestId}]:`, error.message)
     }
     return Promise.reject(error)
   }

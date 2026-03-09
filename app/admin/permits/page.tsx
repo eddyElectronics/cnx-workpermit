@@ -24,7 +24,7 @@ export default function AdminPermitsPage() {
   const [documents, setDocuments] = useState<any[]>([])
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [filterDate, setFilterDate] = useState<string>(getThailandDateString())
+  const [filterDate, setFilterDate] = useState<string>('')
   
   // Audit states
   const [auditPermitId, setAuditPermitId] = useState<number | null>(null)
@@ -91,12 +91,15 @@ export default function AdminPermitsPage() {
     loadPendingPermits()
   }, [user, liffProfile, router])
 
-  // Filter permits based on selected date
+  // Filter permits: show only pending (รอตรวจสอบ) and filter by date
   useEffect(() => {
-    let filtered = permits
+    // Show only permits that haven't been reviewed yet
+    let filtered = permits.filter(permit =>
+      permit.Status === 'รอตรวจสอบ' || permit.Status === PERMIT_STATUS.PENDING
+    )
     
     if (filterDate) {
-      filtered = permits.filter(permit => {
+      filtered = filtered.filter(permit => {
         if (!permit.StartDate || !permit.EndDate) return false
         
         const selectedDate = new Date(filterDate)
@@ -108,17 +111,10 @@ export default function AdminPermitsPage() {
       })
     }
     
-    // Sort: รออนุมัติ first, then by UpdatedDate descending
-    const sorted = filtered.sort((a, b) => {
-      const aIsPending = a.Status === 'รออนุมัติ' || a.Status === PERMIT_STATUS.PENDING
-      const bIsPending = b.Status === 'รออนุมัติ' || b.Status === PERMIT_STATUS.PENDING
-      
-      if (aIsPending && !bIsPending) return -1
-      if (!aIsPending && bIsPending) return 1
-      
-      // If both have same pending status, sort by UpdatedDate
-      return new Date(b.UpdatedDate).getTime() - new Date(a.UpdatedDate).getTime()
-    })
+    // Sort by CreatedDate descending (newest first)
+    const sorted = filtered.sort((a, b) =>
+      new Date(b.CreatedDate).getTime() - new Date(a.CreatedDate).getTime()
+    )
     
     setFilteredPermits(sorted)
     setCurrentPage(1) // Reset to first page when filtering

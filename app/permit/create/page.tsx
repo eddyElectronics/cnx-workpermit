@@ -12,6 +12,14 @@ import { WORK_SHIFTS } from '@/lib/config'
 import { liffService } from '@/lib/liff'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { getThailandDateString } from '@/lib/date-utils'
+import imageCompression from 'browser-image-compression'
+
+const getThailandDatePlusDaysString = (days: number): string => {
+  const [year, month, day] = getThailandDateString().split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+  date.setUTCDate(date.getUTCDate() + days)
+  return date.toISOString().split('T')[0]
+}
 
 const permitSchema = z.object({
   ownerName: z.string().min(1, 'กรุณาระบุชื่อเจ้าของงาน'),
@@ -27,7 +35,7 @@ const permitSchema = z.object({
   const start = data.startDate
   return start >= today
 }, {
-  message: 'วันที่เริ่มต้นต้องไม่ย้อนหลัง',
+  message: 'วันที่เริ่มต้นต้องตั้งแต่วันนี้',
   path: ['startDate'],
 }).refine((data) => {
   const start = new Date(data.startDate)
@@ -53,6 +61,7 @@ export default function CreatePermitPage() {
   const [minStartDate, setMinStartDate] = useState('')
   const [minEndDate, setMinEndDate] = useState('')
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  const [activePreviewIndex, setActivePreviewIndex] = useState<number | null>(null)
 
   const {
     register,
@@ -64,11 +73,12 @@ export default function CreatePermitPage() {
   })
 
   useEffect(() => {
-    // Set minimum date to today (Thailand timezone)
+    // Set minimum and default start date to today (Thailand timezone)
     const todayStr = getThailandDateString()
     setMinStartDate(todayStr)
     setMinEndDate(todayStr)
-  }, [])
+    setValue('startDate', todayStr)
+  }, [setValue])
 
   useEffect(() => {
     // Cleanup preview URLs on unmount
@@ -127,36 +137,57 @@ export default function CreatePermitPage() {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
 
     setUploadError(null)
     const fileArray = Array.from(files)
+    const maxSizeBytes = 250 * 1024
+    const maxSizeMb = 250 / 1024
     
-    // Validate file type (images and PDF)
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
+    // Validate file type (images only)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
     const invalidTypes = fileArray.filter(f => !allowedTypes.includes(f.type))
     
     if (invalidTypes.length > 0) {
-      setUploadError('รองรับเฉพาะไฟล์รูปภาพ JPG, PNG และ PDF เท่านั้น')
-      return
-    }
-    
-    // Validate file size (max 250KB per file)
-    const maxSize = 250 * 1024
-    const invalidFiles = fileArray.filter(f => f.size > maxSize)
-    
-    if (invalidFiles.length > 0) {
-      setUploadError('ไฟล์รูปภาพต้องมีขนาดไม่เกิน 250KB')
+      setUploadError('รองรับเฉพาะไฟล์รูปภาพ JPG และ PNG เท่านั้น')
       return
     }
 
+    const processedFiles: File[] = []
+    for (const file of fileArray) {
+      if (file.type.startsWith('image/')) {
+        try {
+          const compressedFile = await imageCompression(file, {
+            maxSizeMB: maxSizeMb,
+            useWebWorker: true,
+          })
+
+          if (compressedFile.size > maxSizeBytes) {
+            setUploadError(`ไม่สามารถบีบอัดไฟล์ ${file.name} ให้เหลือไม่เกิน 250KB ได้`)
+            return
+          }
+
+          processedFiles.push(compressedFile)
+        } catch (compressionErr) {
+          console.error('Image compression failed:', compressionErr)
+          setUploadError(`บีบอัดไฟล์ ${file.name} ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง`)
+          return
+        }
+      } else {
+        processedFiles.push(file)
+      }
+    }
+
     // Create preview URLs for new files
-    const newPreviewUrls = fileArray.map(file => URL.createObjectURL(file))
+    const newPreviewUrls = processedFiles.map(file => URL.createObjectURL(file))
     
-    setUploadedFiles(prev => [...prev, ...fileArray])
+    setUploadedFiles(prev => [...prev, ...processedFiles])
     setPreviewUrls(prev => [...prev, ...newPreviewUrls])
+
+    // Reset input to allow selecting same file again
+    e.target.value = ''
   }
 
   const handleUploadClick = () => {
@@ -526,13 +557,13 @@ export default function CreatePermitPage() {
             {/* File Upload */}
             <div>
               <label className="label">
-                อัพโหลดเอกสารประกอบ <span className="text-red-500">*</span>
+                อัพโหลดรูปภาพประกอบ <span className="text-red-500">*</span>
               </label>
               <input
                 id="file-upload"
                 type="file"
                 multiple
-                accept="image/jpeg,image/jpg,image/png,application/pdf"
+                accept="image/jpeg,image/jpg,image/png"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -550,7 +581,7 @@ export default function CreatePermitPage() {
                 เลือกไฟล์
               </button>
               <p className="text-xs text-gray-500 mt-1">
-                รองรับเฉพาะไฟล์รูปภาพ JPG, PNG และ PDF (สูงสุด 250KB ต่อไฟล์)
+                รองรับเฉพาะไฟล์รูปภาพ JPG และ PNG เท่านั้น 
               </p>
               {uploadError && (
                 <p className="error-text">{uploadError}</p>
@@ -566,17 +597,25 @@ export default function CreatePermitPage() {
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         {/* Image Preview */}
-                        <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden border border-gray-200">
+                        <button
+                          type="button"
+                          onClick={() => setActivePreviewIndex(index)}
+                          className="relative w-16 h-16 shrink-0 rounded overflow-hidden border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          aria-label={`ดูรูปตัวอย่าง ${file.name}`}
+                        >
                           <Image
                             src={previewUrls[index]}
                             alt={file.name}
                             fill
                             className="object-cover"
                           />
-                        </div>
+                        </button>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-gray-900 truncate">
                             {file.name}
+                          </p>
+                          <p className="text-xs text-primary-600">
+                            แตะรูปเพื่อดูภาพขนาดใหญ่
                           </p>
                           <p className="text-xs text-gray-500">
                             {(file.size / 1024).toFixed(1)} KB
@@ -586,7 +625,7 @@ export default function CreatePermitPage() {
                       <button
                         type="button"
                         onClick={() => removeFile(index)}
-                        className="text-red-600 hover:text-red-800 p-1 flex-shrink-0"
+                        className="text-red-600 hover:text-red-800 p-1 shrink-0"
                       >
                         <svg
                           className="w-5 h-5"
@@ -607,6 +646,53 @@ export default function CreatePermitPage() {
                 </div>
               )}
             </div>
+
+            {activePreviewIndex !== null && previewUrls[activePreviewIndex] && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                onClick={() => setActivePreviewIndex(null)}
+              >
+                <div
+                  className="relative w-full max-w-3xl rounded-2xl bg-white p-3 shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {uploadedFiles[activePreviewIndex]?.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActivePreviewIndex(null)}
+                      className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                      aria-label="ปิดหน้าต่างแสดงตัวอย่างรูปภาพ"
+                    >
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="relative aspect-square max-h-[75vh] overflow-hidden rounded-xl bg-gray-100">
+                    <Image
+                      src={previewUrls[activePreviewIndex]}
+                      alt={uploadedFiles[activePreviewIndex]?.name || 'Preview image'}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 100vw, 768px"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="pt-4 flex gap-3">
